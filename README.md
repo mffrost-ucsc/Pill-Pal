@@ -24,25 +24,25 @@ A prescription management and reminder app.
 ### Backend
 To set up the backend, navigate to the backend directory and run:
 
-    ``` $ docker-compose build --no-cache
-        $ docker-compose up -d
-    ```
+    $ docker-compose build --no-cache
+    $ docker-compose up -d
+    
 After making changes to the server you can rebuild the images with:
 
-    ```$ docker-compose up -d --build```
+    $ docker-compose up -d --build
 
 If you need to reset the backend to it's inital state (i.e. the database will be reset to **only what's in the init folder**): navigate to the backend directory, **delete the data folder in the database directory**, and run:
 
-    ``` docker-compose down -v
-        $ docker-compose build --no-cache
-        $ docker-compose up -d
-    ```
+    $ docker-compose down -v
+    $ docker-compose build --no-cache
+    $ docker-compose up -d
+    
 
 The database can be connected to and edited via MySQL Workbench. Instructions are here: https://medium.com/@chrischuck35/how-to-create-a-mysql-instance-with-docker-compose-1598f3cc1be
 
 When you are done working, run:
 
-    ``` docker-compose down -v ```
+    $ docker-compose down -v
   
 ### Frontend
 Once you have React Native installed and a simulator set up (either with XCode or Andriod Studio; see the React Native CLI link for more details), navigate to the frontend directory and run:
