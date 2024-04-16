@@ -46,7 +46,14 @@ When you are done working, run:
   
 ### Frontend
 Once you have React Native installed and a simulator set up (either with XCode or Andriod Studio; see the React Native CLI link for more details), navigate to the frontend directory and run:
-    ```$ npm start```
+
+    $ npm install
+
+This will install all the dependencies required to run the frontend.
+
+To view and manually test the app, in the frontend directory run:
+
+    $ npm start
     
 This should launch Metro, which will give you options for launching the app (type i for ios or a for andriod). This should open the simulator and update the display automatically when the code changes. Make sure the backend docker containers are running if you want any server requests to work. 
 
