@@ -40,20 +40,18 @@ function Test(): React.JSX.Element {
   const [test, setTest] = React.useState('Click the Button');
 
   return (
-    <SafeAreaView>
-      <View>
-        <Button title="Press Me"
-          type="solid"
-          onPress={() => {handlePress(setTest)}}
-          containerStyle={{
-            width: 150,
-          }}
-        />
-        <Text>
-          {test}
-        </Text>
-      </View>
-    </SafeAreaView>
+    <View>
+      <Button title="Press Me"
+        type="solid"
+        onPress={() => {handlePress(setTest)}}
+        containerStyle={{
+          width: 150,
+        }}
+      />
+      <Text>
+        {test}
+      </Text>
+    </View>
   );
 }
 

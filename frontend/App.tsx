@@ -32,6 +32,7 @@ import {
 } from 'react-native/Libraries/NewAppScreen';
 
 import Test from './components/Test';
+import {NotificationButton, ReoccurringNotification} from './components/Notifications';
 
 type SectionProps = PropsWithChildren<{
   title: string;
@@ -76,7 +77,13 @@ function App(): React.JSX.Element {
         barStyle={isDarkMode ? 'light-content' : 'dark-content'}
         backgroundColor={backgroundStyle.backgroundColor}
       />
-      <Test />
+
+      <View style={{flexDirection:'column', gap: 10}}>
+        <Test />
+        <NotificationButton/>
+        <ReoccurringNotification/>
+      </View>
+
       <ScrollView
         contentInsetAdjustmentBehavior="automatic"
         style={backgroundStyle}>
