@@ -33,6 +33,8 @@ import {
 
 import Test from './components/Test';
 import {NotificationButton, ReoccurringNotification} from './components/Notifications';
+import {IsUpdatedProvider} from './components/IsUpdatedContext' // context to share whether med info has been updated
+import MedList from './components/MedList';
 
 type SectionProps = PropsWithChildren<{
   title: string;
@@ -78,11 +80,14 @@ function App(): React.JSX.Element {
         backgroundColor={backgroundStyle.backgroundColor}
       />
 
-      <View style={{flexDirection:'column', gap: 10}}>
-        <Test />
-        <NotificationButton/>
-        <ReoccurringNotification/>
-      </View>
+      <IsUpdatedProvider>
+        <View style={{flexDirection:'column', gap: 10}}>
+          <Test />
+          <NotificationButton/>
+          <ReoccurringNotification/>
+          <MedList/>
+        </View>
+      </IsUpdatedProvider>
 
       <ScrollView
         contentInsetAdjustmentBehavior="automatic"

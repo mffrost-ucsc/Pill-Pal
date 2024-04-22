@@ -94,7 +94,7 @@ async function cancelReoccurring(id:string) {
  * A button the will send the user a notification when they push it
  * @returns {React.JSX.Element}
  */
-export function NotificationButton() {
+export function NotificationButton(): React.JSX.Element {
   return (
     <View>
       <Button title="Send Notification"
@@ -111,7 +111,7 @@ export function NotificationButton() {
  * The other will cancel the notification
  * @returns {React.JSX.Element}
  */
-export function ReoccurringNotification() {
+export function ReoccurringNotification(): React.JSX.Element {
   return (
     <View style={{flexDirection:'column', gap: 10}}>
       <Button title="Send Notif. Every 15 Mins"
