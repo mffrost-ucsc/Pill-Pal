@@ -6,6 +6,7 @@
 import React from 'react';
 import {Text, SafeAreaView, View} from 'react-native';
 import {Button} from '@rneui/themed';
+import {ServerAddr, ServerPort} from '../communication';
 
 /**
  * This function handles the press event.
@@ -13,7 +14,7 @@ import {Button} from '@rneui/themed';
  * and then sets the test state to the output
  */
 function handlePress(setTest: Function) {
-  fetch('http://localhost:5000/test')
+  fetch('http://' + ServerAddr + ':' + ServerPort + '/test')
     .then((res) => {
       if (!res.ok) {
         throw res

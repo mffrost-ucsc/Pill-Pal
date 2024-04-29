@@ -10,8 +10,8 @@ app = Flask(__name__)
 config = {
         'user': 'root',
         'password': 'pwd',
-        'host': 'host.docker.internal',
-        'port': '3906',
+        'host': 'database',
+        'port': '3306',
         'database': 'test'
     }
 
