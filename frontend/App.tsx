@@ -31,12 +31,25 @@ import {
   ReloadInstructions,
 } from 'react-native/Libraries/NewAppScreen';
 
+import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+
 import {RealmProvider} from '@realm/react';
 import {Medication} from './realm/models';
 import Test from './components/Test';
 import {NotificationButton, ReoccurringNotification} from './components/Notifications';
 import MedList from './components/MedList';
 import { TestAdd } from './components/TestAdd';
+import AppNavigator from './components/AppNavigator';
+import NavigateButton from './components/ButtonWithNavigation';
+import HomeScreen from './components/HomeScreen';
+import NewScreen from './components/NewScreen';
+
+type SectionProps = PropsWithChildren<{
+  title: string;
+}>;
+
+const Stack = createNativeStackNavigator();
 
 function App(): React.JSX.Element {
   const isDarkMode = useColorScheme() === 'dark';
@@ -46,27 +59,32 @@ function App(): React.JSX.Element {
   };
 
   return (
-    <SafeAreaView style={backgroundStyle}>
-      <StatusBar
-        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
-        backgroundColor={backgroundStyle.backgroundColor}
-      />
-
-      <RealmProvider schema={[Medication]}>
-        <ScrollView 
-          contentContainerStyle={{
-            rowGap: 16
-          }}
-        >
-          <Test />
-          <NotificationButton/>
-          <ReoccurringNotification/>
-          <MedList/>
-          <TestAdd/>
-        </ScrollView>
-      </RealmProvider>
-    </SafeAreaView>
+    <NavigationContainer>
+        <Stack.Navigator initialRouteName="HomeScreen">
+            <Stack.Screen name="HomeScreen" component={HomeScreen} />
+            <Stack.Screen name="NewScreen" component={NewScreen} />
+        </Stack.Navigator>
+       </NavigationContainer>
   );
 }
+
+const styles = StyleSheet.create({
+  sectionContainer: {
+    marginTop: 32,
+    paddingHorizontal: 24,
+  },
+  sectionTitle: {
+    fontSize: 24,
+    fontWeight: '600',
+  },
+  sectionDescription: {
+    marginTop: 8,
+    fontSize: 18,
+    fontWeight: '400',
+  },
+  highlight: {
+    fontWeight: '700',
+  },
+});
 
 export default App;

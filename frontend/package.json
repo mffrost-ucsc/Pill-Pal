@@ -11,11 +11,15 @@
   },
   "dependencies": {
     "@notifee/react-native": "^7.8.2",
+    "@react-navigation/native": "^6.1.17",
+    "@react-navigation/native-stack": "^6.9.26",
     "@realm/react": "^0.6.2",
     "@rneui/base": "^4.0.0-rc.7",
     "@rneui/themed": "^4.0.0-rc.8",
     "react": "18.2.0",
     "react-native": "0.73.6",
+    "react-native-safe-area-context": "^4.10.1",
+    "react-native-screens": "^3.31.1",
     "react-native-vector-icons": "^10.0.3",
     "realm": "^12.7.1"
   },
