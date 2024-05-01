@@ -2,7 +2,7 @@ import React from 'react';
 import { Button, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 
-const NavigateButton: React.FC = ({routeName}) => {
+const LoginButton: React.FC = ({routeName}) => {
   const navigation = useNavigation();
 
   const handlePress = () => {
@@ -12,7 +12,7 @@ const NavigateButton: React.FC = ({routeName}) => {
 
   return (
     <Button
-      title="Go to Medication Add Screen"
+      title="Login"
       onPress={handlePress}
       style={styles.button}
     />
@@ -26,4 +26,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default NavigateButton;
+export default LoginButton;

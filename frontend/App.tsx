@@ -40,10 +40,11 @@ import Test from './components/Test';
 import {NotificationButton, ReoccurringNotification} from './components/Notifications';
 import MedList from './components/MedList';
 import { TestAdd } from './components/TestAdd';
-import AppNavigator from './components/AppNavigator';
 import NavigateButton from './components/ButtonWithNavigation';
 import HomeScreen from './components/HomeScreen';
 import NewScreen from './components/NewScreen';
+import LoginScreen from './components/LoginScreen';
+import LoginButton from './components/LoginButton';
 
 type SectionProps = PropsWithChildren<{
   title: string;
@@ -60,7 +61,8 @@ function App(): React.JSX.Element {
 
   return (
     <NavigationContainer>
-        <Stack.Navigator initialRouteName="HomeScreen">
+        <Stack.Navigator initialRouteName="LoginScreen">
+            <Stack.Screen name="LoginScreen" component={LoginScreen} />
             <Stack.Screen name="HomeScreen" component={HomeScreen} />
             <Stack.Screen name="NewScreen" component={NewScreen} />
         </Stack.Navigator>
