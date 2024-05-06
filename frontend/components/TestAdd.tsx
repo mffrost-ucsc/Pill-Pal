@@ -62,10 +62,6 @@ export const TestAdd = () => {
         title="Add Med"
         onPress={addMed}
       />
-      <Button
-        title="Delete All Meds"
-        onPress={deleteAll}
-      />
     </View>
   );
 };
