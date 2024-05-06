@@ -55,10 +55,10 @@ function App(): React.JSX.Element {
       <RealmProvider schema={[Medication]}>
         <ScrollView 
           contentContainerStyle={{
-            rowGap: 16
+            rowGap: 16,
+            height: '100%'
           }}
         >
-          <Test />
           <NotificationButton/>
           <ReoccurringNotification/>
           <MedList/>

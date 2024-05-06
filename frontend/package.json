@@ -16,6 +16,7 @@
     "@rneui/themed": "^4.0.0-rc.8",
     "react": "18.2.0",
     "react-native": "0.73.6",
+    "react-native-dropdown-picker": "^5.4.6",
     "react-native-vector-icons": "^10.0.3",
     "realm": "^12.7.1"
   },
