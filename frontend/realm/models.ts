@@ -17,6 +17,7 @@ export class Medication extends Realm.Object<Medication> {
   _id!: BSON.ObjectId; // unique id for each med (generated automatically)
   name!: string; // name of the med
   dosage!: Dosage; // see dictionary above
+  lastAsked?: Date; // last time asked if taken
   extraInfo?: string; // additional info about the med (optional)
 
   static schema: Realm.ObjectSchema = {
@@ -25,8 +26,22 @@ export class Medication extends Realm.Object<Medication> {
       _id: {type: 'objectId', default: () => new BSON.ObjectId()},
       name: 'string',
       dosage: 'mixed{}',
+      lastAsked: 'date?',
       extraInfo: 'string',
     },
     primaryKey: '_id',
+  };
+}
+
+export class MedLog extends Realm.Object<MedLog> {
+  medId!: BSON.ObjectId; // _id of Medication
+  date!: Date; // date/time taken
+
+  static schema: Realm.ObjectSchema = {
+    name: 'MedLog',
+    properties: {
+      medId: 'objectId',
+      date: 'date',
+    },
   };
 }
