@@ -10,7 +10,6 @@ CREATE TABLE Patients (
     FirstName VARCHAR(50),
     LastName VARCHAR(50),
     BirthDate DATE,
-    Address VARCHAR(100)
 );
 
 CREATE TABLE Doctors (
@@ -18,32 +17,20 @@ CREATE TABLE Doctors (
     FirstName VARCHAR(50),
     LastName VARCHAR(50),
     BirthDate DATE,
-    Address VARCHAR(100)
-);
-
-CREATE TABLE Appointments (
-    AppointmentID INT PRIMARY KEY,
-    PatientID INT,
-    DoctorID INT,
-    AppointmentDate DATE,
-    AppointmentTime TIME,
-    FOREIGN KEY (PatientID) REFERENCES Patients(PatientID),
-    FOREIGN KEY (DoctorID) REFERENCES Doctors(DoctorID)
-);
-
-CREATE TABLE Medications (
-    MedicationID INT PRIMARY KEY,
-    MedicationName VARCHAR(50),
-    MedicationDescription VARCHAR(100)
 );
 
 CREATE TABLE Prescriptions (
     PrescriptionID INT PRIMARY KEY,
     PatientID INT,
     DoctorID INT,
-    MedicationID INT,
     PrescriptionDate DATE,
     FOREIGN KEY (PatientID) REFERENCES Patients(PatientID),
     FOREIGN KEY (DoctorID) REFERENCES Doctors(DoctorID),
-    FOREIGN KEY (MedicationID) REFERENCES Medications(MedicationID)
+);
+
+CREATE TABLE Reminders (
+    ReminderID INT PRIMARY KEY,
+    PrescriptionID INT,
+    ReminderDate DATE,
+    FOREIGN KEY (PrescriptionID) REFERENCES Prescriptions(PrescriptionID)
 );
