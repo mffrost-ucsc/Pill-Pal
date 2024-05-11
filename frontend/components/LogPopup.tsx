@@ -1,10 +1,39 @@
-import React, {useState, useEffect} from 'react';
+import React from 'react';
 import {View, Modal, Text, StyleSheet} from 'react-native';
 import {Button} from '@rneui/themed';
 import {logTaken, logAsked, toAsk} from '../log';
 import {Medication} from '../realm/models';
-import {useRealm} from '@realm/react';
+import {useRealm, useQuery} from '@realm/react';
 import Realm from 'realm';
+
+function testMeds(realm: Realm): void {
+  realm.write(() => {
+    realm.deleteAll();
+    realm.create(Medication, {
+      name: 'med1',
+      dosage: {amountPerDose: 1, interval: 'daily', timesPerInterval: 1},
+      extraInfo: '',
+    });
+    realm.create(Medication, {
+      name: 'med2',
+      dosage: {amountPerDose: 2, interval: 'weekly', timesPerInterval: 1},
+      extraInfo: '',
+    });
+    realm.create(Medication, {
+      name: 'med3',
+      dosage: {amountPerDose: 3, interval: 'monthly', timesPerInterval: 1},
+      extraInfo: '',
+    });
+  });
+}
+function clearLastAsked(realm: Realm): void {
+  const meds = realm.objects(Medication);
+  realm.write(() => {
+    for (let med of meds) {
+      med.lastAsked = undefined;
+    }
+  });
+}
 
 function popupContents(
   realm: Realm,
@@ -39,9 +68,10 @@ function popupContents(
  */
 export default function LogPopup(): React.JSX.Element {
   const realm = useRealm();
-  const [med, updateMed] = useState<Medication | null>(null);
-  const [dirty, updateDirty] = useState(false);
-  useEffect(() => updateMed(toAsk(realm)), [realm, dirty]);
+  const meds = useQuery(Medication);
+  const med = toAsk(meds);
+  // testMeds(realm);
+  // clearLastAsked(realm);
 
   if (!med) {
     return <View />;
@@ -54,7 +84,6 @@ export default function LogPopup(): React.JSX.Element {
           <View style={styles.modalView}>
             {popupContents(realm, med, () => {
               logAsked(realm, med._id);
-              updateDirty(!dirty);
             })}
           </View>
         </View>

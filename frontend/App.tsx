@@ -38,6 +38,7 @@ import {NotificationButton, ReoccurringNotification} from './components/Notifica
 import MedList from './components/MedList';
 import { TestAdd } from './components/TestAdd';
 import LogPopup from './components/LogPopup';
+import Log from './components/Log';
 
 function App(): React.JSX.Element {
   const isDarkMode = useColorScheme() === 'dark';
@@ -65,6 +66,7 @@ function App(): React.JSX.Element {
           <MedList/>
           <TestAdd/>
           <LogPopup/>
+          <Log/>
         </ScrollView>
       </RealmProvider>
     </SafeAreaView>
@@ -72,3 +74,5 @@ function App(): React.JSX.Element {
 }
 
 export default App;
+
+// vim: ts=2 sw=2

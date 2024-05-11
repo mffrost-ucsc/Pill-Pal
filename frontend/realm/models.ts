@@ -34,13 +34,15 @@ export class Medication extends Realm.Object<Medication> {
 }
 
 export class MedLog extends Realm.Object<MedLog> {
-  medId!: BSON.ObjectId; // _id of Medication
+  name!: string; // name of the med
+  amount!: number; // number of pills taken
   date!: Date; // date/time taken
 
   static schema: Realm.ObjectSchema = {
     name: 'MedLog',
     properties: {
-      medId: 'objectId',
+      name: 'string',
+      amount: 'int',
       date: 'date',
     },
   };
