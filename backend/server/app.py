@@ -12,7 +12,7 @@ config = {
         'password': 'pwd',
         'host': 'host.docker.internal',
         'port': '3906',
-        'database': 'test'
+        'database': 'PillPal'
     }
 
 # test route
@@ -20,7 +20,7 @@ config = {
 def testing():
     connection = mysql.connector.connect(**config)
     cursor = connection.cursor(dictionary=True)
-    cursor.execute('''SELECT * FROM test_data''')
+    cursor.execute('''SELECT * FROM PillPall''')
     data = cursor.fetchall()
     cursor.close()
     connection.close()

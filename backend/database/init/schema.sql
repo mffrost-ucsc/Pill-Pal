@@ -9,6 +9,9 @@ CREATE TABLE Patients (
     PatientID INT PRIMARY KEY,
     FirstName VARCHAR(50),
     LastName VARCHAR(50),
+    Email VARCHAR(50),
+    PASSWORDS VARCHAR(50),
+    Phone VARCHAR(50),
     BirthDate DATE,
 );
 
@@ -16,7 +19,8 @@ CREATE TABLE Doctors (
     DoctorID INT PRIMARY KEY,
     FirstName VARCHAR(50),
     LastName VARCHAR(50),
-    BirthDate DATE,
+    Email VARCHAR(50),
+    Phone VARCHAR(50),
 );
 
 CREATE TABLE Prescriptions (
