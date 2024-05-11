@@ -32,7 +32,7 @@ import {
 } from 'react-native/Libraries/NewAppScreen';
 
 import {RealmProvider} from '@realm/react';
-import {Medication} from './realm/models';
+import {Medication, MedLog} from './realm/models';
 import Test from './components/Test';
 import {NotificationButton, ReoccurringNotification} from './components/Notifications';
 import MedList from './components/MedList';
@@ -53,7 +53,7 @@ function App(): React.JSX.Element {
         backgroundColor={backgroundStyle.backgroundColor}
       />
 
-      <RealmProvider schema={[Medication]}>
+      <RealmProvider schema={[Medication, MedLog]}>
         <ScrollView 
           contentContainerStyle={{
             rowGap: 16,
