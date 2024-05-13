@@ -21,6 +21,8 @@ import {
   Text,
   useColorScheme,
   View,
+  Button,
+  Alert
 } from 'react-native';
 
 import {
@@ -36,7 +38,11 @@ import {Medication} from './realm/models';
 import Test from './components/Test';
 import {NotificationButton, ReoccurringNotification} from './components/Notifications';
 import MedList from './components/MedList';
-import { TestAdd } from './components/TestAdd';
+import {TestAdd} from './components/TestAdd';
+import {MedReminderTimesProvider} from './components/MedReminderTimesContext';
+import {MedFrequencyProvider} from './components/MedFrequencyContext';
+import {IsMedReminderProvider} from './components/IsMedReminderContext';
+
 
 function App(): React.JSX.Element {
   const isDarkMode = useColorScheme() === 'dark';
@@ -62,7 +68,13 @@ function App(): React.JSX.Element {
           <NotificationButton/>
           <ReoccurringNotification/>
           <MedList/>
-          <TestAdd/>
+          <MedReminderTimesProvider>
+            <MedFrequencyProvider>
+              <IsMedReminderProvider>
+                <TestAdd/>
+              </IsMedReminderProvider>
+            </MedFrequencyProvider>
+          </MedReminderTimesProvider>
         </ScrollView>
       </RealmProvider>
     </SafeAreaView>
