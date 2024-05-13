@@ -1,7 +1,7 @@
 
 import React, {useState} from 'react';
-import {ScrollView, Text, TextInput, View, Alert} from 'react-native';
-import {Button, CheckBox} from '@rneui/themed';
+import {Text, TextInput, View, Alert} from 'react-native';
+import {CheckBox} from '@rneui/themed';
 import notifee, {AndroidNotificationSetting, TimestampTrigger, TriggerType, RepeatFrequency, AndroidImportance, AndroidVisibility} from '@notifee/react-native';
 import DropDownPicker from 'react-native-dropdown-picker';
 import {MedReminderTimesContext} from './MedReminderTimesContext';
@@ -75,6 +75,8 @@ export async function setReminder(index:number, notifId:string, medName:string, 
     Alert.alert('Permissions Required', 'Please enable SCHEDULE_EXACT_ALARM permissions in your settings. Otherwise you will not recieve reoccurring notifications from the app.', [{text: 'OK'}]);
     await notifee.openAlarmPermissionSettings();
   }
+
+  console.log('reminder set for ' + reminderTimes[index]);
 }
 
 export const MedReminder = () => {
@@ -85,9 +87,18 @@ export const MedReminder = () => {
   const [min, setMin] = useState<Array<number>>([]);
   const [dayDropdownOpen, setDayDropdownOpen] = useState<Array<boolean>>([]);
   const [dayVal, setDayVal] = useState<Array<any>>([]);
-  const [day, setDay] = useState<Array<Array<Record<any, any>>>>([]);
-  const [periodDropdownOpen, setPeriodDropdownOpen] = useState(false);
-  const [periodVal, setPeriodVal] = useState(null);
+  const [day, setDay] = useState([
+    {label: 'Monday', value: 0},
+    {label: 'Tuesday', value: 1},
+    {label: 'Wednesday', value: 2},
+    {label: 'Thursday', value: 3},
+    {label: 'Friday', value: 4},
+    {label: 'Saturday', value: 5},
+    {label: 'Sunday', value: 6},
+  ]);
+  const [periodDropdownOpen, setPeriodDropdownOpen] = useState<Array<boolean>>([]);
+  const [periodVal, setPeriodVal] = useState<Array<string>>([]);
+  const [currentPeriodVal, setCurrentPeriodVal] = useState(null);
   const [period, setPeriod] = useState([
     {label: 'AM', value: 'AM'},
     {label: 'PM', value: 'PM'},
@@ -96,7 +107,7 @@ export const MedReminder = () => {
   const toggleCheckbox = () => isMedReminderContext!.setIsMedReminder(!isMedReminderContext!.isMedReminder);
 
   const addReminderTime = (index:number, field:string, newVal:string) => {
-    let newList = medReminderTimesContext!.medReminderTimes;
+    let newList = [... medReminderTimesContext!.medReminderTimes];
 
     if (!newList[index]) {
       newList[index] = {'hours': NaN, 'mins': NaN, 'day': '', 'period': ''};
@@ -107,16 +118,25 @@ export const MedReminder = () => {
       temp = [...hour];
       temp[index] = Number(newVal);
       setHour(temp);
-      newList[index]['hours'] = hour[index];
+      newList[index].hours = newVal;
     } else if (field == 'mins') {
+      if (Number(newVal) > 0) {
+        newVal = newVal.replace(/^0+/, '');
+      }
       temp = [...min];
       temp[index] = Number(newVal);
       setMin(temp);
-      newList[index]['mins'] = min[index];
+      newList[index].mins = newVal;
     } else if (field == 'day') {
-      newList[index]['day'] = dayVal[index];
+      let temp = [... dayVal];
+      temp[index] = newVal;
+      setDayVal(temp);
+      newList[index].day = newVal;
     } else {
-      newList[index]['period'] = period[index];
+      let temp = [... periodVal];
+      temp[index] = newVal;
+      setPeriodVal(temp);
+      newList[index].period = newVal;
     }
 
     medReminderTimesContext!.setMedReminderTimes(newList);
@@ -134,42 +154,21 @@ export const MedReminder = () => {
     return temp;
   }
 
-  const calcVal = (index:number, valList:any[], val:any) => {
-    const temp = [...valList];
-
-    temp[index] = val;
-
-    return temp;
-  }
+  React.useEffect(() => {
+    for (let i = 0; i < dayVal.length; i++) {
+      if (dayVal[i] == 'updating') {
+        addReminderTime(i, 'day', currentDay!);
+      }
+    }
+  }, [currentDay]);
 
   React.useEffect(() => {
-    let dayDropdown = [];
-    let dayVals = [];
-    let tempDayVal =[];
-    let hourList = [];
-    let minList = [];
-    for (let i = 0; i < medFrequencyContext!.medFrequency[0]; i++) {
-      dayDropdown.push(false);
-      dayVals.push([
-        {label: 'Monday', value: 0},
-        {label: 'Tuesday', value: 1},
-        {label: 'Wednesday', value: 2},
-        {label: 'Thursday', value: 3},
-        {label: 'Friday', value: 4},
-        {label: 'Saturday', value: 5},
-        {label: 'Sunday', value: 6},
-      ]);
-      tempDayVal.push(null);
-      hourList.push(NaN);
-      minList.push(NaN);
+    for (let i = 0; i < periodVal.length; i++) {
+      if (periodVal[i] == 'updating') {
+        addReminderTime(i, 'period', currentPeriodVal!);
+      }
     }
-
-    setDayDropdownOpen(dayDropdown);
-    setDay(dayVals);
-    setDayVal(tempDayVal);
-    setHour(hourList);
-    setMin(minList);
-  });
+  }, [currentPeriodVal]);
 
   return (
     <View>
@@ -183,7 +182,7 @@ export const MedReminder = () => {
             title="Send Me Reminders to Take This Medication"
       />
       <View style={{display: (isMedReminderContext!.isMedReminder && medFrequencyContext!.medFrequency[1] != 'asNeeded') ? 'flex' : 'none'}}>
-        {(medFrequencyContext!.medFrequency[0] || medFrequencyContext!.medFrequency[1]) ? Array.from({length: medFrequencyContext!.medFrequency[0]},(_, index) =>
+        {(!Number.isNaN(medFrequencyContext!.medFrequency[0]) && !(medFrequencyContext!.medFrequency[1].length == 0)) ? Array.from({length: medFrequencyContext!.medFrequency[0]},(_, index) =>
           (medFrequencyContext!.medFrequency[1] == 'daily') ?
           <View style={{flexDirection: 'row', gap: 10, flexWrap: 'wrap'}} key={'daily' + index}>
             <Text>{'Reminder ' + (index + 1) + ':'}</Text>
@@ -200,16 +199,19 @@ export const MedReminder = () => {
               placeholder="Minute" 
             />
             <DropDownPicker
-              open={periodDropdownOpen}
-              value={periodVal}
+              open={periodDropdownOpen[index]}
+              value={periodVal[index]}
               items={period}
-              setOpen={setPeriodDropdownOpen}
-              setValue={setPeriodVal}
+              setOpen={() => setPeriodDropdownOpen(calcDropdownOpen(index, periodDropdownOpen))}
+              setValue={(val) => {
+                let temp = [... periodVal];
+                temp[index] = 'updating';
+                setPeriodVal(temp);
+                setCurrentPeriodVal(val);
+              }}
               setItems={setPeriod}
               listMode="SCROLLVIEW"
-              containerStyle={{
-                zIndex: periodDropdownOpen ? 1000 : 0
-              }}
+              dropDownDirection="TOP"
               placeholder='AM or PM'
             />
           </View>
@@ -229,25 +231,32 @@ export const MedReminder = () => {
               placeholder="Minute" 
             />
             <DropDownPicker
-              open={periodDropdownOpen}
-              value={periodVal}
+              open={periodDropdownOpen[index]}
+              value={periodVal[index]}
               items={period}
-              setOpen={setPeriodDropdownOpen}
-              setValue={setPeriodVal}
+              setOpen={() => setPeriodDropdownOpen(calcDropdownOpen(index, periodDropdownOpen))}
+              setValue={(val) => {
+                let temp = [... periodVal];
+                temp[index] = 'updating';
+                setPeriodVal(temp);
+                setCurrentPeriodVal(val);
+              }}
               setItems={setPeriod}
               listMode="SCROLLVIEW"
-              containerStyle={{
-                zIndex: periodDropdownOpen ? 1000 : 0
-              }}
+              dropDownDirection="TOP"
               placeholder='AM or PM'
             />
             <DropDownPicker
               open={dayDropdownOpen[index]}
               value={dayVal[index]}
-              items={day[index]}
+              items={day}
               setOpen={() => setDayDropdownOpen(calcDropdownOpen(index, dayDropdownOpen))}
-              setValue={setCurrentDay}
-              onChangeValue={(val) => {setDayVal(calcVal(index, dayVal, val)); addReminderTime(index, 'day', val)}}
+              setValue={(val) => {
+                let temp = [... dayVal];
+                temp[index] = 'updating';
+                setDayVal(temp);
+                setCurrentDay(val);
+              }}
               setItems={setDay}
               listMode="SCROLLVIEW"
               dropDownDirection="TOP"

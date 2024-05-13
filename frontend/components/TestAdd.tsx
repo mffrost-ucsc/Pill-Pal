@@ -38,13 +38,16 @@ export const TestAdd = () => {
     let reminderIds : string[] = [];
     // set up reminders
     if (isMedReminderContext!.isMedReminder) {
-      for (let i = 0; i < medFrequencyContext!.medFrequency[0]; i++) {
-        if (medFrequencyContext!.medFrequency[1] && medReminderTimesContext!.medReminderTimes[i] && medReminderTimesContext!.medReminderTimes[i].hour <= 12 && medReminderTimesContext!.medReminderTimes[i].hour > 0 && medReminderTimesContext!.medReminderTimes[i].min <= 60 && medReminderTimesContext!.medReminderTimes[i].min >= 0 && ((medFrequencyContext!.medFrequency[1] == 'weekly') ? (medReminderTimesContext!.medReminderTimes[i].day.length > 0) : true)) {
+      for (let i = 0; i < medReminderTimesContext!.medReminderTimes.length; i++) {
+        if (medFrequencyContext!.medFrequency[1] && medReminderTimesContext!.medReminderTimes[i] /*&& medReminderTimesContext!.medReminderTimes[i].hour <= 12 && medReminderTimesContext!.medReminderTimes[i].hour > 0 && medReminderTimesContext!.medReminderTimes[i].min <= 60 && medReminderTimesContext!.medReminderTimes[i].min >= 0 && ((medFrequencyContext!.medFrequency[1] == 'weekly') ? (medReminderTimesContext!.medReminderTimes[i].day.length > 0) : true)*/) {
           const newId = uuidv4();
           reminderIds.push(newId);
           setReminder(i, newId, medName, dosageAmount, medFrequencyContext!.medFrequency[1], medReminderTimesContext!.medReminderTimes);
         } else {
-          Alert.alert('Unfinished or Invalid Data Entry', 'Please fill in the reminder fields properly.', [{text: 'OK'}]);
+          Alert.alert('Unfinished or Invalid Data Entry', 'Please fill in the Reminder fields properly.', [{text: 'OK'}]);
+          const times = JSON.stringify(medReminderTimesContext!.medReminderTimes);
+          console.log('Med reminder times: ' + times);
+          return;
         }
       }
     }
@@ -52,6 +55,7 @@ export const TestAdd = () => {
     // check for any empty required fields
     if (medName == '' || dosageAmount == '' || !medFrequencyContext!.medFrequency[1] || (Number.isNaN(medFrequencyContext!.medFrequency[0]) && medFrequencyContext!.medFrequency[1] != 'asNeeded')) {
       Alert.alert('Unfinished Data Entry', 'Please fill in the required fields.', [{text: 'OK'}]);
+      return;
     }
 
     realm.write(() => {
@@ -75,6 +79,8 @@ export const TestAdd = () => {
     if (medReminderTimesContext) {
       medReminderTimesContext.setMedReminderTimes([]);
     }
+
+    console.log('med added');
   };
 
   const deleteAll = () => {
@@ -87,38 +93,15 @@ export const TestAdd = () => {
 
   const setFrequency = (newVal:number) => {
     //setDosageFrequency(newVal);
-    const newTuple = medFrequencyContext!.medFrequency;
-    newTuple[0] = newVal;
-    medFrequencyContext!.setMedFrequency(newTuple);
+    const newTuple:[number, string] = [... medFrequencyContext!.medFrequency];
 
-    /*
-    let dayDropdown = [];
-    let dayVals = [];
-    let tempDayVal =[];
-    let hourList = [];
-    let minList = [];
-    for (let i = 0; i < newVal; i++) {
-      dayDropdown.push(false);
-      dayVals.push([
-        {label: 'Monday', value: 0},
-        {label: 'Tuesday', value: 1},
-        {label: 'Wednesday', value: 2},
-        {label: 'Thursday', value: 3},
-        {label: 'Friday', value: 4},
-        {label: 'Saturday', value: 5},
-        {label: 'Sunday', value: 6},
-      ]);
-      tempDayVal.push(null);
-      hourList.push(NaN);
-      minList.push(NaN);
+    if (newVal != 0) {
+      newTuple[0] = newVal;
+    } else {
+      newTuple[0] = NaN;
     }
 
-    setDayDropdownOpen(dayDropdown);
-    setDay(dayVals);
-    setDayVal(tempDayVal);
-    setHour(hourList);
-    setMin(minList);
-    */
+    medFrequencyContext!.setMedFrequency(newTuple);
   }
 
   return (
@@ -175,7 +158,7 @@ export const TestAdd = () => {
       <MedReminder/>
       <Button
         title="Add Med"
-        onPress={() => {console.log('pressed'); addMed}}
+        onPress={addMed}
       />
       <Button
         title="Delete All Meds"
