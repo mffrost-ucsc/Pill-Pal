@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useState} from 'react';
 import {View, Modal, Text, StyleSheet} from 'react-native';
 import {Button} from '@rneui/themed';
 import {logTaken, logAsked, toAsk} from '../log';
@@ -24,14 +24,6 @@ function testMeds(realm: Realm): void {
       dosage: {amountPerDose: 3, interval: 'monthly', timesPerInterval: 1},
       extraInfo: '',
     });
-  });
-}
-function clearLastAsked(realm: Realm): void {
-  const meds = realm.objects(Medication);
-  realm.write(() => {
-    for (let med of meds) {
-      med.lastAsked = undefined;
-    }
   });
 }
 
@@ -62,6 +54,8 @@ function popupContents(
   );
 }
 
+let once = true;
+
 /**
  * A button the will display a popup asking if the med was taken
  * @returns {React.JSX.Element}
@@ -70,8 +64,16 @@ export default function LogPopup(): React.JSX.Element {
   const realm = useRealm();
   const meds = useQuery(Medication);
   const med = toAsk(meds);
+
+  if (once) {
+    for (const m of meds) {
+      realm.write(() => {
+        m.lastAsked = undefined;
+      });
+    }
+    once = false;
+  }
   // testMeds(realm);
-  // clearLastAsked(realm);
 
   if (!med) {
     return <View />;
