@@ -2,19 +2,20 @@
 import React, {useState} from 'react';
 import {Text, TextInput, View, Alert} from 'react-native';
 import {CheckBox} from '@rneui/themed';
-import notifee, {AndroidNotificationSetting, TimestampTrigger, TriggerType, RepeatFrequency, AndroidImportance, AndroidVisibility} from '@notifee/react-native';
+import notifee, {AndroidNotificationSetting, TimestampTrigger, TriggerType, RepeatFrequency, AndroidImportance, AndroidVisibility, EventType, EventDetail} from '@notifee/react-native';
 import DropDownPicker from 'react-native-dropdown-picker';
 import {MedReminderTimesContext} from './MedReminderTimesContext';
 import {MedFrequencyContext} from './MedFrequencyContext';
 import {IsMedReminderContext} from './IsMedReminderContext';
+import {logAsked, logTaken} from '../log';
 
-export async function setReminder(index:number, notifId:string, medName:string, dosageAmount:string, value:string, reminderTimes:any[]) {
+export async function setReminder(index:number, notifId:string, medName:string, dosageAmount:string, value:string, reminderTimes:any[], onResponse:(taken: bool) => void) {
   const settings = await notifee.getNotificationSettings();
   const date = new Date(Date.now());
   let interval;
 
   if (reminderTimes[index].period == 'PM') {
-    reminderTimes[index].hours += 12;
+    reminderTimes[index].hours = +reminderTimes[index].hours + 12;
   }
 
   // set time and interval
@@ -67,6 +68,19 @@ export async function setReminder(index:number, notifId:string, medName:string, 
           visibility: AndroidVisibility.PRIVATE,
           autoCancel: false,
           showTimestamp: true,
+          actions: [
+            {
+              title: 'Taken',
+              pressAction: {id: 'yes'},
+            },
+            {
+              title: 'Not Taken',
+              pressAction: {id: 'no'},
+            },
+          ],
+        },
+        ios: {
+          categoryId: 'reminder',
         },
       },
       trigger,
@@ -75,6 +89,23 @@ export async function setReminder(index:number, notifId:string, medName:string, 
     Alert.alert('Permissions Required', 'Please enable SCHEDULE_EXACT_ALARM permissions in your settings. Otherwise you will not recieve reoccurring notifications from the app.', [{text: 'OK'}]);
     await notifee.openAlarmPermissionSettings();
   }
+
+  const cb = (type: EventType, detail: EventDetail) => {
+    if (type === EventType.ACTION_PRESS) {
+      if (detail.pressAction.id === 'yes' || detail.pressAction.id === 'no') {
+        onResponse(detail.pressAction.id === 'yes');
+      }
+      notifee.cancelDisplayedNotification(notifId);
+    }
+    console.log('in handler');
+  };
+
+  notifee.onForegroundEvent(({type, detail}) => {
+    cb(type, detail);
+  });
+  notifee.onBackgroundEvent(async ({type, detail}) => {
+    cb(type, detail);
+  });
 
   console.log('reminder set for ' + reminderTimes[index]);
 }
@@ -169,6 +200,25 @@ export const MedReminder = () => {
       }
     }
   }, [currentPeriodVal]);
+
+  const [isSet, setIsSet] = React.useState(false);
+  if (!isSet) {
+    notifee.setNotificationCategories([
+      {
+        id: 'reminder',
+        actions: [
+          {
+            id: 'yes',
+            title: 'Taken',
+          },
+          {
+            id: 'no',
+            title: 'Not Taken',
+          },
+        ],
+      },
+    ]);
+  }
 
   return (
     <View>

@@ -20,28 +20,21 @@ export function toAsk(meds: Realm.Results<Medication>): Medication | null {
   return null;
 }
 
-export function logTaken(realm: Realm, id: BSON.ObjectId) {
-  const med = realm.objectForPrimaryKey(Medication, id);
-  if (med === null) {
-    return;
-  }
+export function logTaken(realm: Realm, med: Medication) {
   realm.write(() => {
     realm.create(MedLog, {
       name: med.name,
-      amount: med.dosage.amountPerDose ?? 1,
+      amount: med.dosage.amountPerDose ? +med.dosage.amountPerDose : 1,
       date: new Date(),
     });
   });
-  console.log('Took ' + id.toString() + ' at ' + new Date().toString() + '.');
+  console.log('Took ' + med.name + ' at ' + new Date().toString() + '.');
 }
 
-export function logAsked(realm: Realm, id: BSON.ObjectId) {
+export function logAsked(realm: Realm, med: Medication) {
   realm.write(() => {
-    const med = realm.objectForPrimaryKey(Medication, id);
-    if (med) {
-      med.lastAsked = new Date();
-    }
+    med.lastAsked = new Date();
   });
-  console.log('Asked about ' + id.toString() + '.');
+  console.log('Asked about ' + med.name + '.');
 }
 // vim: sw=2 ts=2

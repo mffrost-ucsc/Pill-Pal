@@ -41,7 +41,7 @@ function popupContents(
         <Button
           style={styles.button}
           onPress={() => {
-            logTaken(realm, med._id);
+            logTaken(realm, med);
             cleanup();
           }}>
           Yes
@@ -54,7 +54,7 @@ function popupContents(
   );
 }
 
-let once = true;
+let once = false;
 
 /**
  * A button the will display a popup asking if the med was taken
@@ -85,7 +85,7 @@ export default function LogPopup(): React.JSX.Element {
         <View style={styles.centeredView}>
           <View style={styles.modalView}>
             {popupContents(realm, med, () => {
-              logAsked(realm, med._id);
+              logAsked(realm, med);
             })}
           </View>
         </View>
