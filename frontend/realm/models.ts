@@ -9,7 +9,7 @@ import Realm, {BSON, Dictionary} from 'realm';
 // will probably need to change this as we go
 interface Dosage extends Dictionary {
   amountPerDose?: number; // number of pills per dose 
-  interval?: string; // how often (daily, weekly, etc)
+  interval?: string; // how often (daily, weekly, etc) 
   timesPerInterval?: number // number of times in that interval (like 2x per day)
 }
 
@@ -19,6 +19,8 @@ export class Medication extends Realm.Object<Medication> {
   dosage!: Dosage; // see dictionary above
   lastAsked?: Date; // last time asked if taken
   extraInfo?: string; // additional info about the med (optional)
+  takeReminder!: boolean;
+  reminderId?: string[];
 
   static schema: Realm.ObjectSchema = {
     name: 'Medication',
@@ -28,6 +30,8 @@ export class Medication extends Realm.Object<Medication> {
       dosage: 'mixed{}',
       lastAsked: 'date?',
       extraInfo: 'string',
+      takeReminder: 'bool',
+      reminderId: 'string[]'
     },
     primaryKey: '_id',
   };

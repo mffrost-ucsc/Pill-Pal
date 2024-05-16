@@ -21,6 +21,8 @@ import {
   Text,
   useColorScheme,
   View,
+  Button,
+  Alert
 } from 'react-native';
 
 import {
@@ -36,7 +38,10 @@ import {Medication, MedLog} from './realm/models';
 import Test from './components/Test';
 import {NotificationButton, ReoccurringNotification} from './components/Notifications';
 import MedList from './components/MedList';
-import { TestAdd } from './components/TestAdd';
+import {TestAdd} from './components/TestAdd';
+import {MedReminderTimesProvider} from './components/MedReminderTimesContext';
+import {MedFrequencyProvider} from './components/MedFrequencyContext';
+import {IsMedReminderProvider} from './components/IsMedReminderContext';
 import LogPopup from './components/LogPopup';
 import Log from './components/Log';
 
@@ -64,9 +69,15 @@ function App(): React.JSX.Element {
           <NotificationButton/>
           <ReoccurringNotification/>
           <MedList/>
-          <TestAdd/>
-          <LogPopup/>
-          <Log/>
+          <MedReminderTimesProvider>
+            <MedFrequencyProvider>
+              <IsMedReminderProvider>
+                <TestAdd/>
+                <LogPopup/>
+                <Log/>
+              </IsMedReminderProvider>
+            </MedFrequencyProvider>
+          </MedReminderTimesProvider>
         </ScrollView>
       </RealmProvider>
     </SafeAreaView>

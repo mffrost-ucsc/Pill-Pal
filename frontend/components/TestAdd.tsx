@@ -7,12 +7,16 @@
  */
 
 import React, {useState} from 'react';
-import {ScrollView, Text, TextInput, View} from 'react-native';
+import {ScrollView, Text, TextInput, View, Alert} from 'react-native';
+import {Button} from '@rneui/themed';
 import DropDownPicker from 'react-native-dropdown-picker';
 import {useRealm} from '@realm/react';
 import {Medication} from '../realm/models';
-import {Button, CheckBox} from '@rneui/themed';
-
+import { v4 as uuidv4 } from 'uuid';
+import {MedReminderTimesContext} from './MedReminderTimesContext';
+import {IsMedReminderContext} from './IsMedReminderContext';
+import {MedFrequencyContext} from './MedFrequencyContext';
+import {MedReminder, setReminder} from './MedReminder';
 
 export const TestAdd = () => {
   const realm = useRealm();
@@ -24,28 +28,59 @@ export const TestAdd = () => {
   const [items, setItems] = useState([
     {label: 'Daily', value: 'daily'},
     {label: 'Weekly', value: 'weekly'},
-    {label: 'Monthly', value: 'monthly'},
     {label: 'As Needed', value: 'asNeeded'}
   ]);
-  const [dosageFrequency, setDosageFrequency] = useState(NaN);
-  const [checked, setChecked] = React.useState(false);
-  const toggleCheckbox = () => setChecked(!checked);
+  const medReminderTimesContext = React.useContext(MedReminderTimesContext);
+  const isMedReminderContext = React.useContext(IsMedReminderContext);
+  const medFrequencyContext = React.useContext(MedFrequencyContext);
 
-  const addMed = () => {
+  const addMed = async () => {
+    let reminderIds : string[] = [];
+    // set up reminders
+    if (isMedReminderContext!.isMedReminder) {
+      for (let i = 0; i < medReminderTimesContext!.medReminderTimes.length; i++) {
+        if (medFrequencyContext!.medFrequency[1] && medReminderTimesContext!.medReminderTimes[i] /*&& medReminderTimesContext!.medReminderTimes[i].hour <= 12 && medReminderTimesContext!.medReminderTimes[i].hour > 0 && medReminderTimesContext!.medReminderTimes[i].min <= 60 && medReminderTimesContext!.medReminderTimes[i].min >= 0 && ((medFrequencyContext!.medFrequency[1] == 'weekly') ? (medReminderTimesContext!.medReminderTimes[i].day.length > 0) : true)*/) {
+          const newId = uuidv4();
+          reminderIds.push(newId);
+          setReminder(i, newId, medName, dosageAmount, medFrequencyContext!.medFrequency[1], medReminderTimesContext!.medReminderTimes);
+        } else {
+          Alert.alert('Unfinished or Invalid Data Entry', 'Please fill in the Reminder fields properly.', [{text: 'OK'}]);
+          const times = JSON.stringify(medReminderTimesContext!.medReminderTimes);
+          console.log('Med reminder times: ' + times);
+          return;
+        }
+      }
+    }
+
+    // check for any empty required fields
+    if (medName == '' || dosageAmount == '' || !medFrequencyContext!.medFrequency[1] || (Number.isNaN(medFrequencyContext!.medFrequency[0]) && medFrequencyContext!.medFrequency[1] != 'asNeeded')) {
+      Alert.alert('Unfinished Data Entry', 'Please fill in the required fields.', [{text: 'OK'}]);
+      return;
+    }
+
     realm.write(() => {
       realm.create(Medication, {
         name: medName,
-        dosage: {amountPerDose: dosageAmount, interval: value, timesPerInterval: dosageFrequency},
-        extraInfo: exInfo
+        dosage: {amountPerDose: dosageAmount, interval: medFrequencyContext!.medFrequency[1], timesPerInterval: medFrequencyContext!.medFrequency[0]},
+        extraInfo: exInfo,
+        takeReminder: isMedReminderContext!.isMedReminder,
+        reminderId: reminderIds
       });
     });
 
+    // reset fields
     setMedName('');
     setDosageAmount('');
-    setValue(null);
-    setDosageFrequency(NaN);
+    //setValue(null);
+    // setDosageFrequency(NaN);
+    medFrequencyContext!.setMedFrequency([NaN, '']);
     setExInfo('');
-    setChecked(false);
+    isMedReminderContext!.setIsMedReminder(false);
+    if (medReminderTimesContext) {
+      medReminderTimesContext.setMedReminderTimes([]);
+    }
+
+    console.log('med added');
   };
 
   const deleteAll = () => {
@@ -54,6 +89,19 @@ export const TestAdd = () => {
     realm.write(() => {
       realm.delete(toDelete);
     });
+  }
+
+  const setFrequency = (newVal:number) => {
+    //setDosageFrequency(newVal);
+    const newTuple:[number, string] = [... medFrequencyContext!.medFrequency];
+
+    if (newVal != 0) {
+      newTuple[0] = newVal;
+    } else {
+      newTuple[0] = NaN;
+    }
+
+    medFrequencyContext!.setMedFrequency(newTuple);
   }
 
   return (
@@ -83,17 +131,18 @@ export const TestAdd = () => {
         items={items}
         setOpen={setDropdownOpen}
         setValue={setValue}
+        onChangeValue={(val) => {medFrequencyContext!.setMedFrequency([medFrequencyContext!.medFrequency[0], (val ? val : '')])}}
         setItems={setItems}
         listMode="SCROLLVIEW"
         containerStyle={{
           zIndex: dropdownOpen ? 1000 : 0
         }}
       />
-      <View style={{flexDirection: 'row', gap: 10, flexWrap: 'wrap'}}>
-        <Text>{'How Many Times Per Day/Week/Month:'}</Text>
+      <View style={{flexDirection: 'row', gap: 10, flexWrap: 'wrap', display: (medFrequencyContext!.medFrequency[1] == 'asNeeded') ? 'none' : 'flex'}}>
+        <Text>{'How Many Times Per Day/Week:'}</Text>
         <TextInput
-          onChangeText={newVal => setDosageFrequency(Number(newVal))}
-          value={(Number.isNaN(dosageFrequency)) ? '' : String(dosageFrequency)}
+          onChangeText={newVal => setFrequency(Number(newVal))}
+          value={(Number.isNaN(medFrequencyContext!.medFrequency[0])) ? '' : String(medFrequencyContext!.medFrequency[0])}
           inputMode='numeric'
           placeholder="Times Per Interval"
         />
@@ -106,17 +155,7 @@ export const TestAdd = () => {
           placeholder="Additional Info"
         />
       </View>
-      <CheckBox
-           checked={checked}
-           onPress={toggleCheckbox}
-           iconType="material-community"
-           checkedIcon="checkbox-outline"
-           uncheckedIcon={'checkbox-blank-outline'}
-           title="Send Me Reminders to Take This Medication"
-      />
-      <View style={{display: (checked) ? 'flex' : 'none'}}>
-        {(dosageFrequency) ? Array.from({length: dosageFrequency},(_,index) => <Text key={index}>{'Reminder ' + (index + 1) + ':'}</Text>) : (<Text>{'Please Fill in Other Info'}</Text>)}
-      </View>
+      <MedReminder/>
       <Button
         title="Add Med"
         onPress={addMed}
