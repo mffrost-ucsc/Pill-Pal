@@ -12,7 +12,7 @@ const NavigateButton: React.FC = ({routeName}) => {
 
   return (
     <Button
-      title="Go to Medication Add Screen"
+      title="Go to Medication Add/Delete Screen"
       onPress={handlePress}
       style={styles.button}
     />

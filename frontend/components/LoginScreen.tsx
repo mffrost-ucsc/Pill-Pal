@@ -20,11 +20,14 @@ import {
 } from 'react-native/Libraries/NewAppScreen';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
+import {RealmProvider} from '@realm/react';
 
 import Section from './Section'
 import NavigateButton from './ButtonWithNavigation';
 import LoginButton from './LoginButton';
 import Logo from '../pillHome.png';
+import {User} from '../realm/models';
+import { CreateUser } from './CreateUser';
 
 const styles = StyleSheet.create({
   logo: {
@@ -51,7 +54,9 @@ function LoginScreen(){
                   backgroundColor={backgroundStyle.backgroundColor}
                 />
                     <Image style={styles.logo} source={require('../pillHome.png')}/>
+                    <CreateUser/>
                     <LoginButton routeName={'HomeScreen'}/>
+
 
               </SafeAreaView>
         );

@@ -19,6 +19,7 @@ import {
 } from 'react-native/Libraries/NewAppScreen';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
+import {Button} from '@rneui/themed';
 
 import {RealmProvider} from '@realm/react';
 import {Medication} from '../realm/models';
@@ -28,6 +29,7 @@ import {NotificationButton, ReoccurringNotification} from './Notifications';
 import MedList from './MedList';
 import NavigateButton from './ButtonWithNavigation';
 import NewScreen from './NewScreen';
+import {deleteButton} from './deleteButton';
 
 const styles = StyleSheet.create({
   sectionContainer: {
@@ -71,7 +73,6 @@ function HomeScreen(){
                     }}
                   >
                     <MedList/>
-                    <TestAdd/>
                     <NavigateButton routeName={'NewScreen'}/>
                   </ScrollView>
                 </RealmProvider>
