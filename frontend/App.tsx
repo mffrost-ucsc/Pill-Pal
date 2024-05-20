@@ -42,6 +42,11 @@ import {TestAdd} from './components/TestAdd';
 import {MedReminderTimesProvider} from './components/MedReminderTimesContext';
 import {MedFrequencyProvider} from './components/MedFrequencyContext';
 import {IsMedReminderProvider} from './components/IsMedReminderContext';
+import { RefillInfoProvider } from './components/RefillInfoContext';
+import { IsRefillReminderProvider } from './components/IsRefillReminderContext';
+import {useQuery, useRealm} from '@realm/react';
+import notifee, {EventType} from '@notifee/react-native';
+import Refill from './components/Refill';
 
 
 function App(): React.JSX.Element {
@@ -71,7 +76,12 @@ function App(): React.JSX.Element {
           <MedReminderTimesProvider>
             <MedFrequencyProvider>
               <IsMedReminderProvider>
-                <TestAdd/>
+                <IsRefillReminderProvider>
+                  <RefillInfoProvider>
+                    <Refill/>
+                    <TestAdd/>
+                  </RefillInfoProvider>
+                </IsRefillReminderProvider>
               </IsMedReminderProvider>
             </MedFrequencyProvider>
           </MedReminderTimesProvider>

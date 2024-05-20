@@ -1,3 +1,7 @@
+/**
+ * This component handles the reminders to take medications, including the
+ * checkbox and time fields.
+ */
 
 import React, {useState} from 'react';
 import {Text, TextInput, View, Alert} from 'react-native';
@@ -13,8 +17,11 @@ export async function setReminder(index:number, notifId:string, medName:string, 
   const date = new Date(Date.now());
   let interval;
 
-  if (reminderTimes[index].period == 'PM') {
+  // date takes military time
+  if (reminderTimes[index].period == 'PM' && reminderTimes[index].hours != 12) {
     reminderTimes[index].hours += 12;
+  } else if (reminderTimes[index].period == 'AM' && reminderTimes[index].hours == 12) {
+    reminderTimes[index].hours = 0;
   }
 
   // set time and interval
@@ -36,13 +43,12 @@ export async function setReminder(index:number, notifId:string, medName:string, 
     // Request permissions (ios)
     await notifee.requestPermission({
       announcement: true,
-      provisional: true
     });
 
     // create a channel (android)
     const channelId = await notifee.createChannel({
       id: 'takeMedReminder',
-      name: 'Take Med Reminder',
+      name: 'Take Med Reminder Channel',
     });
 
     // Create a time-based trigger
@@ -75,26 +81,24 @@ export async function setReminder(index:number, notifId:string, medName:string, 
     Alert.alert('Permissions Required', 'Please enable SCHEDULE_EXACT_ALARM permissions in your settings. Otherwise you will not recieve reoccurring notifications from the app.', [{text: 'OK'}]);
     await notifee.openAlarmPermissionSettings();
   }
-
-  console.log('reminder set for ' + reminderTimes[index]);
 }
 
 export const MedReminder = () => {
   const medReminderTimesContext = React.useContext(MedReminderTimesContext);
-  const medFrequencyContext = React.useContext(MedFrequencyContext);
+  const medFrequencyContext = React.useContext(MedFrequencyContext); // index 1 is interval (daily, weekly, asNeeded), index 0 is number of times per interval
   const isMedReminderContext = React.useContext(IsMedReminderContext);
   const [hour, setHour] = useState<Array<number>>([]);
   const [min, setMin] = useState<Array<number>>([]);
   const [dayDropdownOpen, setDayDropdownOpen] = useState<Array<boolean>>([]);
   const [dayVal, setDayVal] = useState<Array<any>>([]);
   const [day, setDay] = useState([
-    {label: 'Monday', value: 0},
-    {label: 'Tuesday', value: 1},
-    {label: 'Wednesday', value: 2},
-    {label: 'Thursday', value: 3},
-    {label: 'Friday', value: 4},
-    {label: 'Saturday', value: 5},
-    {label: 'Sunday', value: 6},
+    {label: 'Monday', value: 1},
+    {label: 'Tuesday', value: 2},
+    {label: 'Wednesday', value: 3},
+    {label: 'Thursday', value: 4},
+    {label: 'Friday', value: 5},
+    {label: 'Saturday', value: 6},
+    {label: 'Sunday', value: 0},
   ]);
   const [periodDropdownOpen, setPeriodDropdownOpen] = useState<Array<boolean>>([]);
   const [periodVal, setPeriodVal] = useState<Array<string>>([]);

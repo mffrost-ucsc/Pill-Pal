@@ -17,6 +17,9 @@ import {MedReminderTimesContext} from './MedReminderTimesContext';
 import {IsMedReminderContext} from './IsMedReminderContext';
 import {MedFrequencyContext} from './MedFrequencyContext';
 import {MedReminder, setReminder} from './MedReminder';
+import { IsRefillReminderContext } from './IsRefillReminderContext';
+import { RefillInfoContext } from './RefillInfoContext';
+import { RefillReminder } from './RefillReminder';
 
 export const TestAdd = () => {
   const realm = useRealm();
@@ -33,6 +36,8 @@ export const TestAdd = () => {
   const medReminderTimesContext = React.useContext(MedReminderTimesContext);
   const isMedReminderContext = React.useContext(IsMedReminderContext);
   const medFrequencyContext = React.useContext(MedFrequencyContext);
+  const isRefillReminderContext = React.useContext(IsRefillReminderContext);
+  const refillInfoContext = React.useContext(RefillInfoContext); // index 0 = refillAmount, 1 = refillReminderCount, 2 = pillCount
 
   const addMed = async () => {
     let reminderIds : string[] = [];
@@ -58,28 +63,39 @@ export const TestAdd = () => {
       return;
     }
 
+    if (isRefillReminderContext!.isRefillReminder) {
+      if (Number.isNaN(refillInfoContext!.refillInfo[0]) || Number.isNaN(refillInfoContext!.refillInfo[1]) || Number.isNaN(refillInfoContext!.refillInfo[2])) {
+        Alert.alert('Unfinished Data Entry', 'Please fill in the Refill Reminder fields properly.', [{text: 'OK'}]);
+        return;
+      }
+    }
+
+    const isRefillReminderVal = isRefillReminderContext!.isRefillReminder;
     realm.write(() => {
       realm.create(Medication, {
         name: medName,
         dosage: {amountPerDose: dosageAmount, interval: medFrequencyContext!.medFrequency[1], timesPerInterval: medFrequencyContext!.medFrequency[0]},
         extraInfo: exInfo,
         takeReminder: isMedReminderContext!.isMedReminder,
-        reminderId: reminderIds
+        reminderId: reminderIds,
+        refillReminder: isRefillReminderVal,
+        refillAmount: (isRefillReminderVal) ? refillInfoContext!.refillInfo[0] : undefined,
+        refillReminderCount: (isRefillReminderVal) ? refillInfoContext!.refillInfo[1] : undefined,
+        pillCount: (isRefillReminderVal) ? refillInfoContext!.refillInfo[2] : undefined
       });
     });
 
     // reset fields
     setMedName('');
     setDosageAmount('');
-    //setValue(null);
-    // setDosageFrequency(NaN);
     medFrequencyContext!.setMedFrequency([NaN, '']);
     setExInfo('');
     isMedReminderContext!.setIsMedReminder(false);
     if (medReminderTimesContext) {
       medReminderTimesContext.setMedReminderTimes([]);
     }
-
+    isRefillReminderContext!.setIsRefillReminder(false);
+    refillInfoContext?.setRefillInfo([NaN, NaN, NaN]);
     console.log('med added');
   };
 
@@ -156,6 +172,7 @@ export const TestAdd = () => {
         />
       </View>
       <MedReminder/>
+      <RefillReminder/>
       <Button
         title="Add Med"
         onPress={addMed}

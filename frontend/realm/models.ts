@@ -20,6 +20,10 @@ export class Medication extends Realm.Object<Medication> {
   extraInfo?: string; // additional info about the med (optional)
   takeReminder!: boolean;
   reminderId?: string[];
+  refillReminder!:boolean;
+  refillAmount?: number;
+  refillReminderCount?: number;
+  pillCount?: number;
 
   static schema: Realm.ObjectSchema = {
     name: 'Medication',
@@ -29,7 +33,11 @@ export class Medication extends Realm.Object<Medication> {
       dosage: 'mixed{}',
       extraInfo: 'string',
       takeReminder: 'bool',
-      reminderId: 'string[]'
+      reminderId: 'string[]',
+      refillReminder: 'bool',
+      refillAmount: 'int',
+      refillReminderCount: 'int',
+      pillCount: 'int',
     },
     primaryKey: '_id',
   };
