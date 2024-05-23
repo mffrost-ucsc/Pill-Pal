@@ -37,6 +37,7 @@ import Test from './components/Test';
 import {NotificationButton, ReoccurringNotification} from './components/Notifications';
 import MedList from './components/MedList';
 import { TestAdd } from './components/TestAdd';
+import Home from './components/Home';
 
 function App(): React.JSX.Element {
   const isDarkMode = useColorScheme() === 'dark';
@@ -58,11 +59,7 @@ function App(): React.JSX.Element {
             rowGap: 16
           }}
         >
-          <Test />
-          <NotificationButton/>
-          <ReoccurringNotification/>
-          <MedList/>
-          <TestAdd/>
+          <Home/>
         </ScrollView>
       </RealmProvider>
     </SafeAreaView>

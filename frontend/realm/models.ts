@@ -18,6 +18,7 @@ export class Medication extends Realm.Object<Medication> {
   name!: string; // name of the med
   dosage!: Dosage; // see dictionary above
   extraInfo?: string; // additional info about the med (optional)
+  lastModified!: Date;
 
   static schema: Realm.ObjectSchema = {
     name: 'Medication',
@@ -26,6 +27,7 @@ export class Medication extends Realm.Object<Medication> {
       name: 'string',
       dosage: 'mixed{}',
       extraInfo: 'string',
+      lastModified: {type: 'date', default: () => Date.now()},
     },
     primaryKey: '_id',
   };

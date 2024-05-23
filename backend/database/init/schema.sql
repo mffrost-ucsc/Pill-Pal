@@ -28,6 +28,8 @@ CREATE TABLE Prescriptions (
     PatientID INT,
     DoctorID INT,
     PrescriptionDate DATE,
+    LastModified DATE,
+    RealmEntry JSON,
     FOREIGN KEY (PatientID) REFERENCES Patients(PatientID),
     FOREIGN KEY (DoctorID) REFERENCES Doctors(DoctorID),
 );
@@ -36,5 +38,6 @@ CREATE TABLE Reminders (
     ReminderID INT PRIMARY KEY,
     PrescriptionID INT,
     ReminderDate DATE,
+    ReminderType VARCHAR(50),
     FOREIGN KEY (PrescriptionID) REFERENCES Prescriptions(PrescriptionID)
 );
