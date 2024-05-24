@@ -19,8 +19,7 @@ CREATE TABLE Doctors (
     DoctorID INT PRIMARY KEY,
     FirstName VARCHAR(50),
     LastName VARCHAR(50),
-    Email VARCHAR(50),
-    Phone VARCHAR(50),
+    
 );
 
 CREATE TABLE Prescriptions (
@@ -37,4 +36,12 @@ CREATE TABLE Reminders (
     PrescriptionID INT,
     ReminderDate DATE,
     FOREIGN KEY (PrescriptionID) REFERENCES Prescriptions(PrescriptionID)
+);
+
+CREATE TABLE AsNeededMedication(
+    AsNeededMedicationID INT PRIMARY KEY,
+    PrescriptionID INT,
+    TimeStampes BIGINT,
+    FOREIGN KEY (PrescriptionID) REFERENCES Prescriptions(PrescriptionID)
+    
 );
