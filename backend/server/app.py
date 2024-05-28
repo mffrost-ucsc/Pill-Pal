@@ -1,8 +1,9 @@
 # References:
 #   - https://www.linkedin.com/pulse/building-flask-application-mysql-database-using-docker-agarwal/
 
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 import mysql.connector
+import json
 
 app = Flask(__name__)
 
@@ -74,8 +75,8 @@ def send_to_db_Perscription():
         cursor = connection.cursor()
         
 
-        query = "INSERT INTO Perscription (PrescriptionID, PatientID, DoctorID, PrescriptionDate, LastModified, RealmEntry) VALUES (%s, %s, %s, %s, %s, %s, %s)"
-        values = (data ['PrescriptionID'], data['PatientID'], data['DoctorID'], data['PrescriptionDate'], data['LastModified'], data['RealmEntry'])
+        query = "INSERT INTO Prescriptions (PrescriptionID, PatientID, DoctorID, PrescriptionDate, LastModified, RealmEntry) VALUES (%s, %s, %s, %s, %s, %s)"
+        values = (data['PrescriptionID'], data['PatientID'], data['DoctorID'], data['PrescriptionDate'], data['LastModified'], json.dumps(data['RealmEntry']))
         
         cursor.execute(query, values)
         connection.commit()
@@ -84,6 +85,7 @@ def send_to_db_Perscription():
         connection.close()
         return jsonify({"status": "success", "message": "Data added successfully"}), 200
     except mysql.connector.Error as e:
+        print(str(e), file=sys.stderr)
         return jsonify({"status": "fail", "message": str(e)}), 500
 
 # run the application

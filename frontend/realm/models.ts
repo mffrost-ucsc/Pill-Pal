@@ -14,7 +14,7 @@ interface Dosage extends Dictionary {
 }
 
 export class Medication extends Realm.Object<Medication> {
-  _id!: BSON.ObjectId; // unique id for each med (generated automatically)
+  _id!: BSON.UUID; // unique id for each med (generated automatically)
   name!: string; // name of the med
   dosage!: Dosage; // see dictionary above
   extraInfo?: string; // additional info about the med (optional)
@@ -23,11 +23,11 @@ export class Medication extends Realm.Object<Medication> {
   static schema: Realm.ObjectSchema = {
     name: 'Medication',
     properties: {
-      _id: {type: 'objectId', default: () => new BSON.ObjectId()},
+      _id: {type: 'uuid', default: () => new BSON.UUID()},
       name: 'string',
       dosage: 'mixed{}',
       extraInfo: 'string',
-      lastModified: {type: 'date', default: () => Date.now()},
+      lastModified: {type: 'date', default: () => new Date()},
     },
     primaryKey: '_id',
   };

@@ -12,7 +12,7 @@ CREATE TABLE Patients (
     Email VARCHAR(50),
     PASSWORDS VARCHAR(50),
     Phone VARCHAR(50),
-    BirthDate DATE,
+    BirthDate DATE
 );
 
 CREATE TABLE Doctors (
@@ -20,18 +20,16 @@ CREATE TABLE Doctors (
     FirstName VARCHAR(50),
     LastName VARCHAR(50),
     Email VARCHAR(50),
-    Phone VARCHAR(50),
+    Phone VARCHAR(50)
 );
 
 CREATE TABLE Prescriptions (
-    PrescriptionID INT PRIMARY KEY,
+    PrescriptionID VARCHAR(50) PRIMARY KEY,
     PatientID INT,
     DoctorID INT,
     PrescriptionDate DATE,
     LastModified DATE,
-    RealmEntry JSON,
-    FOREIGN KEY (PatientID) REFERENCES Patients(PatientID),
-    FOREIGN KEY (DoctorID) REFERENCES Doctors(DoctorID),
+    RealmEntry JSON
 );
 
 CREATE TABLE Reminders (

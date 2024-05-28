@@ -10,15 +10,17 @@ import {TestAdd} from './TestAdd';
 import {ServerAddr, ServerPort} from '../communication';
 import {useQuery, useRealm} from '@realm/react';
 import {Medication} from '../realm/models';
-const _ = require('lodash');
+import {BSON} from 'realm';
+import moment from 'moment'; // for formatting date
+var _ = require('lodash'); // for comparing dictionaries
 
-function Home() {
+function Home(): React.JSX.Element {
   const realm = useRealm();
-  const [addMed, setAddMed] = React.useState(false);
-  let dbInfo:Array<any>;
+  const localMedList = useQuery(Medication);
+  let dbInfo:Array<any> = [];
 
   // fetches the medications from the database
-  const fetchMedInfo = () => {
+  const fetchMedInfo:any = async () => {
     const authToken = null; // TODO: GET AUTHENTICATION TOKEN
     let header = {};
 
@@ -28,7 +30,7 @@ function Home() {
 
     let url = 'http://' + ServerAddr + ':' + ServerPort + '/get_all_prescription';
 
-    fetch(url, 
+    return await fetch(url, 
       {
         method: 'GET',
         headers: header,
@@ -42,21 +44,23 @@ function Home() {
       return res.json();
     })
     .then((json) => {
-      console.log('fetched: ' + json);
       dbInfo = json;
+      console.log('successfully fetched meds from DB');
+      return json;
     })
     .catch((error) => {
       console.log(`ERROR: ${JSON.stringify(error)}`);
+      return [];
     });
   }
 
   const updateDbMedInfo = (newData:Record<string, any>) => {
     const authToken = null; // TODO: GET AUTHENTICATION TOKEN
-    let header = {};
+    let header:any = {'Content-Type': 'application/json'};
     const data = {realmEntry: newData, prescriptionID: newData._id}
 
     if (authToken != null) {
-      header = {'Authorization': `Bearer ${authToken}`}
+      header = {'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}`};
     }
 
     let url = 'http://' + ServerAddr + ':' + ServerPort + '/update_prescription_realm';
@@ -82,14 +86,14 @@ function Home() {
 
   const addMedToDb = (newData:Record<string, any>) => {
     const authToken = null; // TODO: GET AUTHENTICATION TOKEN
-    let header = {};
-    const data = {PrescriptionID: newData._id, PatientID: 'TODO', DoctorID: '', PrescriptionDate: newData.lastModified, LastModified: newData.lastModified, RealmEntry: newData}
+    let header:any = {'Content-Type': 'application/json'};
+    const data = {PrescriptionID: newData._id, PatientID: -1, DoctorID: -1, PrescriptionDate: moment(newData.lastModified).format('YYYY-MM-DD HH:mm:ss'), LastModified: moment(newData.lastModified).format('YYYY-MM-DD HH:mm:ss'), RealmEntry: newData}
 
     if (authToken != null) {
-      header = {'Authorization': `Bearer ${authToken}`}
+      header = {'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}`}
     }
 
-    let url = 'http://' + ServerAddr + ':' + ServerPort + '/update_prescription_realm';
+    let url = 'http://' + ServerAddr + ':' + ServerPort + '/add_prescription';
 
     fetch(url, 
       {
@@ -111,11 +115,11 @@ function Home() {
   }
 
   // synchronizes the med info fetched from the backend with local storage (realm)
-  const synchronize = () => {
-    const localMedList = useQuery(Medication);
+  const synchronize = async () => {
+    await fetchMedInfo();
 
     // no need to synch if no data is present
-    if (localMedList.length == 0 && dbInfo.length == 0) {
+    if (!localMedList && dbInfo.length == 0) {
       return;
     }
 
@@ -142,13 +146,15 @@ function Home() {
         }
         // confirm we found a matching entry; if not need to add it to Realm
         if (!isFound) {
+          let entry = JSON.parse(dbMed.RealmEntry);
+          let id = new BSON.UUID(entry._id);
           realm.write(() => {
             realm.create(Medication, {
-              _id: dbMed.RealmEntry._id,
-              name: dbMed.RealmEntry.name,
-              dosage: dbMed.RealmEntry.dosage,
-              extraInfo: dbMed.RealmEntry.extraInfo,
-              lastModified: dbMed.RealmEntry.lastModified,
+              _id: id,
+              name: entry.name,
+              dosage: entry.dosage,
+              extraInfo: entry.extraInfo,
+              lastModified: entry.lastModified,
             })
           })
         }
@@ -183,17 +189,13 @@ function Home() {
 
   // on first render, fetch data from database and sync it
   React.useEffect(() => {
-    fetchMedInfo();
     synchronize();
   }, []);
 
   return(
     <SafeAreaView>
       <MedList/>
-      <Button onPress={() => setAddMed(true)}>Add Medication</Button> 
-      <View style={{display: (addMed) ? 'flex' : 'none'}}>
-        <TestAdd/>
-      </View>
+      <TestAdd/>
     </SafeAreaView>
   );
 }
