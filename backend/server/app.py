@@ -10,8 +10,8 @@ app = Flask(__name__)
 config = {
         'user': 'root',
         'password': 'pwd',
-        'host': 'host.docker.internal',
-        'port': '3906',
+        'host': 'database',
+        'port': '3306',
         'database': 'PillPal'
     }
 
@@ -20,7 +20,7 @@ config = {
 def testing():
     connection = mysql.connector.connect(**config)
     cursor = connection.cursor(dictionary=True)
-    cursor.execute('''SELECT * FROM PillPall''')
+    cursor.execute('''SELECT * FROM PillPal''')
     data = cursor.fetchall()
     cursor.close()
     connection.close()
