@@ -21,6 +21,8 @@ import {
   Text,
   useColorScheme,
   View,
+  Button,
+  Alert
 } from 'react-native';
 
 import {
@@ -36,7 +38,16 @@ import {Medication} from './realm/models';
 import Test from './components/Test';
 import {NotificationButton, ReoccurringNotification} from './components/Notifications';
 import MedList from './components/MedList';
-import { TestAdd } from './components/TestAdd';
+import {TestAdd} from './components/TestAdd';
+import {MedReminderTimesProvider} from './components/MedReminderTimesContext';
+import {MedFrequencyProvider} from './components/MedFrequencyContext';
+import {IsMedReminderProvider} from './components/IsMedReminderContext';
+import { RefillInfoProvider } from './components/RefillInfoContext';
+import { IsRefillReminderProvider } from './components/IsRefillReminderContext';
+import {useQuery, useRealm} from '@realm/react';
+import notifee, {EventType} from '@notifee/react-native';
+import Refill from './components/Refill';
+
 
 function App(): React.JSX.Element {
   const isDarkMode = useColorScheme() === 'dark';
@@ -55,14 +66,25 @@ function App(): React.JSX.Element {
       <RealmProvider schema={[Medication]}>
         <ScrollView 
           contentContainerStyle={{
-            rowGap: 16
+            rowGap: 16,
+            height: '100%'
           }}
         >
-          <Test />
           <NotificationButton/>
           <ReoccurringNotification/>
           <MedList/>
-          <TestAdd/>
+          <MedReminderTimesProvider>
+            <MedFrequencyProvider>
+              <IsMedReminderProvider>
+                <IsRefillReminderProvider>
+                  <RefillInfoProvider>
+                    <Refill/>
+                    <TestAdd/>
+                  </RefillInfoProvider>
+                </IsRefillReminderProvider>
+              </IsMedReminderProvider>
+            </MedFrequencyProvider>
+          </MedReminderTimesProvider>
         </ScrollView>
       </RealmProvider>
     </SafeAreaView>
