@@ -20,6 +20,7 @@ import {MedReminder, setReminder} from './MedReminder';
 import { IsRefillReminderContext } from './IsRefillReminderContext';
 import { RefillInfoContext } from './RefillInfoContext';
 import { RefillReminder } from './RefillReminder';
+import {logAsked, logTaken} from '../log';
 
 export const TestAdd = () => {
   const realm = useRealm();
@@ -40,6 +41,17 @@ export const TestAdd = () => {
   const refillInfoContext = React.useContext(RefillInfoContext); // index 0 = refillAmount, 1 = refillReminderCount, 2 = pillCount
 
   const addMed = async () => {
+    let med: Medication;
+    realm.write(() => {
+      med = realm.create(Medication, {
+        name: medName,
+        dosage: {amountPerDose: dosageAmount, interval: medFrequencyContext!.medFrequency[1], timesPerInterval: medFrequencyContext!.medFrequency[0]},
+        extraInfo: exInfo,
+        takeReminder: isMedReminderContext!.isMedReminder,
+        reminderId: [],
+      });
+    });
+
     let reminderIds : string[] = [];
     // set up reminders
     if (isMedReminderContext!.isMedReminder) {
@@ -47,7 +59,20 @@ export const TestAdd = () => {
         if (medFrequencyContext!.medFrequency[1] && medReminderTimesContext!.medReminderTimes[i] /*&& medReminderTimesContext!.medReminderTimes[i].hour <= 12 && medReminderTimesContext!.medReminderTimes[i].hour > 0 && medReminderTimesContext!.medReminderTimes[i].min <= 60 && medReminderTimesContext!.medReminderTimes[i].min >= 0 && ((medFrequencyContext!.medFrequency[1] == 'weekly') ? (medReminderTimesContext!.medReminderTimes[i].day.length > 0) : true)*/) {
           const newId = uuidv4();
           reminderIds.push(newId);
-          setReminder(i, newId, medName, dosageAmount, medFrequencyContext!.medFrequency[1], medReminderTimesContext!.medReminderTimes);
+          setReminder(
+            i,
+            newId,
+            medName,
+            dosageAmount,
+            medFrequencyContext!.medFrequency[1],
+            medReminderTimesContext!.medReminderTimes,
+            taken => {
+              logAsked(realm, med);
+              if (taken) {
+                logTaken(realm, med);
+              }
+            },
+          );
         } else {
           Alert.alert('Unfinished or Invalid Data Entry', 'Please fill in the Reminder fields properly.', [{text: 'OK'}]);
           const times = JSON.stringify(medReminderTimesContext!.medReminderTimes);
@@ -56,6 +81,10 @@ export const TestAdd = () => {
         }
       }
     }
+
+    realm.write(() => {
+      med.reminderId = reminderIds;
+    });
 
     // check for any empty required fields
     if (medName == '' || dosageAmount == '' || !medFrequencyContext!.medFrequency[1] || (Number.isNaN(medFrequencyContext!.medFrequency[0]) && medFrequencyContext!.medFrequency[1] != 'asNeeded')) {

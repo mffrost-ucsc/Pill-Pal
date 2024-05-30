@@ -34,7 +34,7 @@ import {
 } from 'react-native/Libraries/NewAppScreen';
 
 import {RealmProvider} from '@realm/react';
-import {Medication} from './realm/models';
+import {Medication, MedLog} from './realm/models';
 import Test from './components/Test';
 import {NotificationButton, ReoccurringNotification} from './components/Notifications';
 import MedList from './components/MedList';
@@ -47,7 +47,8 @@ import { IsRefillReminderProvider } from './components/IsRefillReminderContext';
 import {useQuery, useRealm} from '@realm/react';
 import notifee, {EventType} from '@notifee/react-native';
 import Refill from './components/Refill';
-
+import LogPopup from './components/LogPopup';
+import Log from './components/Log';
 
 function App(): React.JSX.Element {
   const isDarkMode = useColorScheme() === 'dark';
@@ -63,7 +64,7 @@ function App(): React.JSX.Element {
         backgroundColor={backgroundStyle.backgroundColor}
       />
 
-      <RealmProvider schema={[Medication]}>
+      <RealmProvider schema={[Medication, MedLog]}>
         <ScrollView 
           contentContainerStyle={{
             rowGap: 16,
@@ -82,6 +83,8 @@ function App(): React.JSX.Element {
                     <TestAdd/>
                   </RefillInfoProvider>
                 </IsRefillReminderProvider>
+                <LogPopup/>
+                <Log/>
               </IsMedReminderProvider>
             </MedFrequencyProvider>
           </MedReminderTimesProvider>
@@ -92,3 +95,5 @@ function App(): React.JSX.Element {
 }
 
 export default App;
+
+// vim: ts=2 sw=2
