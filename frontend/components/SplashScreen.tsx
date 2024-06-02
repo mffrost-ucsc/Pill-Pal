@@ -9,6 +9,7 @@ const styles = StyleSheet.create({
   logo: {
       width: 200,
       height: 200,
+      alignSelf: 'center',
   },
 });
 
@@ -16,7 +17,7 @@ function SplashScreen() {
   return (
     <SafeAreaView>
       <Image style={styles.logo} source={require('../pillHome.png')}/>
-      <Text h2>Loading...</Text>
+      <Text h2 style={{textAlign: 'center'}}>Loading...</Text>
     </SafeAreaView>
   );
 }

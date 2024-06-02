@@ -1,8 +1,7 @@
 # References:
-#   - https://www.linkedin.com/pulse/building-flask-application-mysql-database-using-docker-agarwal/
-
-from flask import Flask, jsonify, request
+#   - https://www.linkedin.com/pulse/building-flask-application-mysql-database-using-docker-agarwal/from flask import Flask, jsonify, request
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity, get_jwt
+from flask import Flask, jsonify, request
 from datetime import datetime
 import mysql.connector
 import bcrypt
@@ -28,6 +27,8 @@ def now_str():
 
 def hashpw(pword):
     salt = b'salt'
+    if isinstance(pword, str):
+        pword = pword.encode('utf-8')
     return bcrypt.kdf(password=pword,
                       salt=salt,
                       desired_key_bytes=64,
@@ -59,10 +60,10 @@ def login():
     pword = data['password']
     query = '''SELECT UserID,PasswordHash FROM Users WHERE Email = %s'''
     values = (uname,)
-    row = exec_sql(query, values)[0]
+    row = exec_sql(query, values)
 
-    if row is not None and checkpw(row['PasswordHash'], pword.encode()):
-        token = create_access_token(identity=row['UserID'])
+    if row and checkpw(row[0]['PasswordHash'], pword.encode()):
+        token = create_access_token(identity=row[0]['UserID'])
         return jsonify({'message': 'Login Success', 'token': token})
     else:
         return jsonify({'message': 'Login Failed'}), 401
@@ -306,6 +307,8 @@ INSERT INTO Users(FirstName, LastName, Email, PasswordHash) VALUES (
 );
 ''', commit=True)
     return "cleared\n"
+
+    return jsonify(data)
 
 # run the application
 if __name__ == '__main__':

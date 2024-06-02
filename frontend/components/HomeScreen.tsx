@@ -35,6 +35,7 @@ import notifee, {EventType} from '@notifee/react-native';
 import Refill from './Refill';
 import LogPopup from './LogPopup';
 import Log from './Log';
+import AuthenticationContext from './AuthenticationContext';
 
 const styles = StyleSheet.create({
   sectionContainer: {
@@ -56,6 +57,8 @@ const styles = StyleSheet.create({
 });
 
 function HomeScreen(){
+  const { signOut } = React.useContext(AuthenticationContext);
+
   return(
     <SafeAreaView>
       <ScrollView 
@@ -72,6 +75,7 @@ function HomeScreen(){
         <LogPopup/>
         <Log/>
         <NavigateButton routeName={'NewScreen'}/>
+        <Button onPress={() => signOut()}>Logout</Button>
       </ScrollView>
     </SafeAreaView>
   );

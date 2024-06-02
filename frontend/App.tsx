@@ -81,14 +81,12 @@ function App(): React.JSX.Element {
             ...prevState,
             isSignout: false,
             userToken: action.token,
-            isLoading: false,
           };
         case 'SIGN_OUT':
           return {
             ...prevState,
             isSignout: true,
             userToken: null,
-            isLoading: false,
           };
       }
     },
@@ -113,6 +111,7 @@ function App(): React.JSX.Element {
       // After restoring token, validate it with the web server
       if (!userToken) {
         dispatch({type: 'SIGN_OUT'});
+        state.isLoading = false;
         return;
       }
 
@@ -152,9 +151,13 @@ function App(): React.JSX.Element {
       signIn: async (username:string, password:string) => {
         // send username and password to server to get token
         let url = 'http://' + ServerAddr + ':' + ServerPort + '/login';
+        const header = {'Content-Type': 'application/json'};
+        const data = {'username': username, 'password': password};
         await fetch(url, 
           {
             method: 'POST',
+            headers: header,
+            body: JSON.stringify(data),
           }
         )
         .then((res) => {
@@ -165,6 +168,7 @@ function App(): React.JSX.Element {
           return res.json();
         })
         .then((json) => {
+          storage.setString('userToken', json.token);
           dispatch({ type: 'SIGN_IN', token: json.token });
           return;
         })
@@ -184,10 +188,12 @@ function App(): React.JSX.Element {
       signOut: () => dispatch({ type: 'SIGN_OUT' }),
       signUp: async (data:any) => {
         // send username and password to server to create new user
-        let url = 'http://' + ServerAddr + ':' + ServerPort + '/login';
+        let url = 'http://' + ServerAddr + ':' + ServerPort + '/user';
+        const header = {'Content-Type': 'application/json'};
         await fetch(url, 
           {
-            method: 'POST',
+            method: 'PUT',
+            headers: header,
             body: JSON.stringify(data),
           }
         )
@@ -222,40 +228,40 @@ function App(): React.JSX.Element {
 
   return (
     <AuthenticationContext.Provider value={authContext}>
-      <NavigationContainer>
-        <Stack.Navigator>
-          {(state.userToken == null) ? (
-            <>
-              <Stack.Screen name="Login"
-                component={LoginScreen}
-                options={{
-                  animationTypeForReplace: state.isSignout ? 'pop' : 'push',
-                }}
-              />
-              <Stack.Screen name="Sign Up"
-                component={SignUpScreen}
-              />
-            </>
-          ) : (
-            <>
-              <RealmProvider schema={[Medication, MedLog]}>
-                <MedReminderTimesProvider>
-                  <MedFrequencyProvider>
-                    <IsMedReminderProvider>
-                      <IsRefillReminderProvider>
-                        <RefillInfoProvider>
-                            <Stack.Screen name="HomeScreen" component={HomeScreen} />
-                            <Stack.Screen name="NewScreen" component={NewScreen} />
-                        </RefillInfoProvider>
-                      </IsRefillReminderProvider>
-                    </IsMedReminderProvider>
-                  </MedFrequencyProvider>
-                </MedReminderTimesProvider>
-              </RealmProvider>
-            </>
-          )}
-        </Stack.Navigator>
-      </NavigationContainer>
+      <RealmProvider schema={[Medication, MedLog]}>
+        <MedReminderTimesProvider>
+          <MedFrequencyProvider>
+            <IsMedReminderProvider>
+              <IsRefillReminderProvider>
+                <RefillInfoProvider>
+                  <NavigationContainer>
+                    <Stack.Navigator>
+                      {(state.userToken == null) ? (
+                        <>
+                          <Stack.Screen name="Login"
+                            component={LoginScreen}
+                            options={{
+                              animationTypeForReplace: state.isSignout ? 'pop' : 'push',
+                            }}
+                          />
+                          <Stack.Screen name="Sign Up"
+                            component={SignUpScreen}
+                          />
+                        </>
+                      ) : (
+                        <>
+                          <Stack.Screen name="HomeScreen" component={HomeScreen} />
+                          <Stack.Screen name="NewScreen" component={NewScreen} />
+                        </>
+                      )}
+                    </Stack.Navigator>
+                  </NavigationContainer>
+                </RefillInfoProvider>
+              </IsRefillReminderProvider>
+            </IsMedReminderProvider>
+          </MedFrequencyProvider>
+        </MedReminderTimesProvider>
+      </RealmProvider>
     </AuthenticationContext.Provider>
   );
 }
