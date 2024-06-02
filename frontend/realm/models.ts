@@ -9,8 +9,30 @@ import Realm, {BSON, Dictionary} from 'realm';
 // will probably need to change this as we go
 interface Dosage extends Dictionary {
   amountPerDose?: number; // number of pills per dose 
-  interval?: string; // how often (daily, weekly, etc) 
-  timesPerInterval?: number // number of times in that interval (like 2x per day)
+  interval?: string; // how often (daily, weekly, etc)
+  timesPerInterval?: number; // number of times in that interval (like 2x per day)
+}
+
+interface Login extends Dictionary {
+    userName?: string;
+    password?: string
+}
+
+export class User extends Realm.Object<User> {
+    _id!: BSON.ObjectId;
+    userName!: string;
+    password!: string
+
+    static schema: Realm.ObjectSchema = {
+    name: 'User',
+    properties: {
+      _id: {type: 'objectId', default: () => new BSON.ObjectId()},
+      userName: 'string',
+      password: 'string',
+    },
+    primaryKey: '_id',
+  };
+
 }
 
 export class Medication extends Realm.Object<Medication> {

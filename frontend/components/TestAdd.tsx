@@ -128,7 +128,7 @@ export const TestAdd = () => {
     console.log('med added');
   };
 
-  const deleteAll = () => {
+ const deleteAll = () => {
     const toDelete = realm
       .objects(Medication)
     realm.write(() => {
@@ -207,7 +207,7 @@ export const TestAdd = () => {
         onPress={addMed}
       />
       <Button
-        title="Delete All Meds"
+        title="Delete Meds"
         onPress={deleteAll}
       />
     </ScrollView>

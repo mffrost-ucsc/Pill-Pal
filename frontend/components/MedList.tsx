@@ -2,11 +2,11 @@
  * This componenet will display a list of the user's current medications
  * It will pull from local storage to do this
  * TODO: I still need to set up retrieving from local storage
- * 
+ *
  * References:
  *  - https://reactnativeelements.com/docs/components/listItem_accordion#props
  *  - https://stackoverflow.com/questions/75057902/how-to-expand-only-one-item-from-a-list-item-accordion-in-react-native
- * 
+ *
  * If there is trouble seeing icons, follow the installation instructions on https://github.com/oblador/react-native-vector-icons?tab=readme-ov-file#installation
  */
 
@@ -37,7 +37,7 @@ let test_data = [
 ];
 
 /**
- * This will be a function to grab the data and format it as needed 
+ * This will be a function to grab the data and format it as needed
  * Possibly not required depending on how data is stored
  */
 function retrieveData() {
