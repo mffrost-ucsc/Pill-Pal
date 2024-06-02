@@ -1,13 +1,23 @@
 import React from 'react';
-import { Button, StyleSheet } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import {StyleSheet } from 'react-native';
+import { useNavigation, ParamListBase} from '@react-navigation/native';
+import {Button} from '@rneui/themed';
+import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 
-const LoginButton: React.FC = ({routeName}) => {
-  const navigation = useNavigation();
+interface Props {
+  routeName?: string
+}
+
+const LoginButton = ({routeName}: Props) => {
+  const navigation = useNavigation<NativeStackNavigationProp<ParamListBase>>();
 
   const handlePress = () => {
     console.log('pressing button')
-    navigation.navigate(routeName); // Replace 'NewScreen' with the name of your new screen
+    if (routeName) {
+      navigation.navigate(routeName); // Replace 'NewScreen' with the name of your new screen
+    } else {
+      navigation.navigate('HomeScreen');
+    }
   };
 
   return (

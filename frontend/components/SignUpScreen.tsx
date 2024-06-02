@@ -1,48 +1,54 @@
 /**
- * Login Page
- * References:
- *  - https://www.geeksforgeeks.org/how-to-show-and-hide-password-in-react-native/
+ * Screen to let the user create an account
  */
 
-import React from 'react';
-import {
-  SafeAreaView,
-  StyleSheet,
-  View,
-  Image,
-  TextInput,
-  ScrollView,
-} from 'react-native';
-import { Button, Text, Icon } from '@rneui/themed';
+import React from "react";
+import { SafeAreaView, ScrollView, TextInput, View, Alert } from "react-native";
+import { Text, Icon, Button } from "@rneui/themed";
 import {ParamListBase, useNavigation } from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import AuthenticationContext from './AuthenticationContext';
+import AuthenticationContext from "./AuthenticationContext";
 
-const styles = StyleSheet.create({
-  logo: {
-      width: 200,
-      height: 200,
-      alignSelf: 'center',
-      paddingVertical: '5%',
-  },
-});
-
-function LoginScreen(){
+function SignUpScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<ParamListBase>>();
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
+  const [firstName, setFirstName] = React.useState('');
+  const [lastName, setLastName] = React.useState('');
   const [showPassword, setShowPassword] = React.useState(false);
   const toggleShowPassword = () => { 
     setShowPassword(!showPassword); 
   };
-  const { signIn } = React.useContext(AuthenticationContext);
-  
-  return(
+  const { signUp } = React.useContext(AuthenticationContext);
+
+  const handleSubmit = () => {
+    if (!email || !password || !firstName || !lastName) {
+      Alert.alert('Unfinished Data Entry', 'Please fill in all of the fields.', [{text: 'OK'}]);
+      return;
+    }
+
+    const data = {'FirstName': firstName, 'LastName': lastName, 'Email': email, 'Password': password};
+    signUp(data);
+    navigation.navigate('Login');
+  }
+
+  return (
     <SafeAreaView>
       <ScrollView style={{paddingHorizontal: '5%'}}>
-        <Image style={styles.logo} source={require('../pillHome.png')}/>
         <View style={{flexDirection:'column', gap: 10}}>
-          <Text h3 style={{textAlign: 'center', paddingBottom: '5%'}}>{'Welcome to Pill Pal!'}</Text>
+          <Text h3 style={{textAlign: 'center', paddingVertical: '5%'}}>{'Create an Account'}</Text>
+          <Text h4>First Name</Text>
+          <TextInput
+            placeholder="Enter First Name"
+            value={firstName}
+            onChangeText={setFirstName}
+          />
+          <Text h4>Last Name</Text>
+          <TextInput
+            placeholder="Enter Last Name"
+            value={lastName}
+            onChangeText={setLastName}
+          />
           <Text h4>Email Address</Text>
           <TextInput
             placeholder="Enter Email"
@@ -65,19 +71,14 @@ function LoginScreen(){
             />
           </View>
           <Button
-            title="Login"
-            onPress={() => signIn(email, password)}
+            title="Create Account"
+            onPress={() => handleSubmit()}
             style={{paddingHorizontal: '25%', paddingVertical: '5%'}}
           />
         </View>
-        <Text onPress={() => navigation.navigate('Sign Up')}
-          style={{paddingTop: '5%', textAlign: 'center'}}
-        >
-          {`Don't Have An Account?\nClick Here to Create One.`}
-        </Text>
       </ScrollView>
     </SafeAreaView>
   );
 }
 
-export default LoginScreen;
+export default SignUpScreen;

@@ -1,6 +1,4 @@
--- Database Schema Should Go Here
--- Code below right now is just for a test, it can be deleted/altered as needed
-
+-- Database Schema
 
 CREATE DATABASE PillPal;
 USE PillPal;
