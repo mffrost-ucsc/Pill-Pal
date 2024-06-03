@@ -9,7 +9,6 @@ function Refill() {
   const meds = useQuery(Medication);
 
   // function to send the refill reminder
-  // should be moved to home page upon integration
   const sendRefillReminder = async (med:Medication) => {
 
     // Request permissions (ios)
@@ -73,7 +72,6 @@ function Refill() {
   } 
 
   // checks if any refills need to be done
-  // should be moved to home page upon integration
   React.useEffect(() => {
     for (const med of meds) {
       if (med.pillCount && med.refillReminderCount) {
@@ -82,10 +80,10 @@ function Refill() {
         }
       }
     }
-  })
+  }, [])
 
   return(
-    <View></View>
+    <></>
   );
 }
 

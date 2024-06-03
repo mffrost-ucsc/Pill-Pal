@@ -36,7 +36,16 @@ function MedList() {
             <>
               <ListItem.Content>
                 <ListItem.Title>{med.name}</ListItem.Title>
-                <ListItem.Subtitle>{med.dosage.interval}</ListItem.Subtitle>
+                { 
+                  (med.dosage.interval == 'asNeeded') ?
+                    <ListItem.Subtitle>
+                      {`Take ${(med.dosage.amountPerDose == 1) ? '1 pill' : med.dosage.amountPerDose + ' pills'} as needed`}
+                    </ListItem.Subtitle>
+                  :
+                  <ListItem.Subtitle>
+                    {`Take ${(med.dosage.amountPerDose == 1) ? '1 pill' : med.dosage.amountPerDose + ' pills'} ${(med.dosage.timesPerInterval == 1) ? 'once' : med.dosage.timesPerInterval + ' times'} per ${(med.dosage.interval == 'daily') ? 'day' : 'week'}`}
+                  </ListItem.Subtitle>
+                }
               </ListItem.Content>
             </>
           }
@@ -49,7 +58,7 @@ function MedList() {
             }
           }}
         >
-          <Text style={{padding: '5%'}}>Additional Info: {(med.extraInfo) ? med.extraInfo : "None"}</Text>
+          <Text style={{padding: '4%'}}>Additional Info: {(med.extraInfo) ? med.extraInfo : "None"}</Text>
         </ListItem.Accordion>
       ))}
     </ScrollView>
