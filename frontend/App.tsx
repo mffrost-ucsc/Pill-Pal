@@ -11,45 +11,19 @@
  * I created a Test component to see if our frontend and backend could communicated properly
  * References:
  *  - https://reactnavigation.org/docs/auth-flow/
+ *  - https://reactnavigation.org/docs/drawer-based-navigation
  */
 
 import React from 'react';
-import type {PropsWithChildren} from 'react';
-import {
-  SafeAreaView,
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  useColorScheme,
-  View,
-  Button,
-  Alert
-} from 'react-native';
-
-import {
-  Colors,
-  DebugInstructions,
-  Header,
-  LearnMoreLinks,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
-
+import { Alert } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-
 import {RealmProvider} from '@realm/react';
-import {Medication, MedLog} from './realm/models';
-import Test from './components/Test';
-import {NotificationButton, ReoccurringNotification} from './components/Notifications';
-import MedList from './components/MedList';
-import NavigateButton from './components/ButtonWithNavigation';
-import HomeScreen from './components/HomeScreen';
-import NewScreen from './components/NewScreen';
+import {User, Medication, MedLog} from './realm/models';
 import LoginScreen from './components/LoginScreen';
-import LoginButton from './components/LoginButton';
 import SplashScreen from './components/SplashScreen';
 import SignUpScreen from './components/SignUpScreen';
+import HomeNavigation from './components/HomeNavigation';
 import {MedReminderTimesProvider} from './components/MedReminderTimesContext';
 import {MedFrequencyProvider} from './components/MedFrequencyContext';
 import {IsMedReminderProvider} from './components/IsMedReminderContext';
@@ -59,14 +33,9 @@ import {ServerAddr, ServerPort} from './communication';
 import AuthenticationContext from './components/AuthenticationContext';
 import storage from './storage';
 
-type SectionProps = PropsWithChildren<{
-  title: string;
-}>;
-
 const Stack = createNativeStackNavigator();
 
 function App(): React.JSX.Element {
-
   const [state, dispatch] = React.useReducer(
     (prevState:any, action:any) => {
       switch (action.type) {
@@ -87,6 +56,7 @@ function App(): React.JSX.Element {
             ...prevState,
             isSignout: true,
             userToken: null,
+            isLoading:false,
           };
       }
     },
@@ -98,14 +68,15 @@ function App(): React.JSX.Element {
   );
 
   React.useEffect(() => {
-    // Fetch the token from storage then navigate to our appropriate place
+    // Fetch the token from storage then navigate to appropriate place
     const bootstrapAsync = async () => {
       let userToken = undefined;
 
       try {
         userToken = await storage.getStringAsync('userToken');
       } catch (e) {
-        return
+        dispatch({type: 'SIGN_OUT'});
+        return;
       }
 
       // After restoring token, validate it with the web server
@@ -133,7 +104,7 @@ function App(): React.JSX.Element {
         return;
       })
       .catch((error) => {
-        if (error.message == 'Network request failed') {
+        if (error.message == 'Network request failed'  || error.status == 404) {
           dispatch({ type: 'RESTORE_TOKEN', token: userToken });
           return;
         } else {
@@ -169,6 +140,7 @@ function App(): React.JSX.Element {
         })
         .then((json) => {
           storage.setString('userToken', json.token);
+          storage.setInt('currentUser', json.userId);
           dispatch({ type: 'SIGN_IN', token: json.token });
           return;
         })
@@ -185,7 +157,10 @@ function App(): React.JSX.Element {
           return;
         });
       },
-      signOut: () => dispatch({ type: 'SIGN_OUT' }),
+      signOut: () => {
+        storage.setInt('currentUser', NaN);
+        dispatch({ type: 'SIGN_OUT' });
+      },
       signUp: async (data:any) => {
         // send username and password to server to create new user
         let url = 'http://' + ServerAddr + ':' + ServerPort + '/user';
@@ -201,13 +176,20 @@ function App(): React.JSX.Element {
           if (!res.ok) {
             throw res;
           }
-    
+
+          return res.json();
+        })
+        .then((json) => {
+          storage.setInt('currentUser', json.userId);
+          
           Alert.alert('User Successfully Created', 'You will now be returned to the login screen.', [{text: 'OK'}]);
+
+          return;
         })
         .catch((error) => {
           if (error.message == 'Network request failed' || error.status == 404) {
             Alert.alert('Sign Up Failed', 'Please make sure you are connected to internet and try again.', [{text: 'OK'}]);
-          } else if (error.status == 401) {
+          } else if (error.status == 403) {
             Alert.alert('Sign Up Failed', 'There is already a user with this email.', [{text: 'OK'}]);
           } else {
             Alert.alert('Internal Server Error', 'Please try again later.', [{text: 'OK'}]);
@@ -228,7 +210,7 @@ function App(): React.JSX.Element {
 
   return (
     <AuthenticationContext.Provider value={authContext}>
-      <RealmProvider schema={[Medication, MedLog]}>
+      <RealmProvider schema={[User, Medication, MedLog]}>
         <MedReminderTimesProvider>
           <MedFrequencyProvider>
             <IsMedReminderProvider>
@@ -250,8 +232,7 @@ function App(): React.JSX.Element {
                         </>
                       ) : (
                         <>
-                          <Stack.Screen name="HomeScreen" component={HomeScreen} />
-                          <Stack.Screen name="NewScreen" component={NewScreen} />
+                            <Stack.Screen options={{headerShown: false}} name="HomeScreen" component={HomeNavigation} />
                         </>
                       )}
                     </Stack.Navigator>

@@ -1,7 +1,6 @@
 /**
  * This componenet will display a list of the user's current medications
  * It will pull from local storage to do this
- * TODO: I still need to set up retrieving from local storage
  *
  * References:
  *  - https://reactnativeelements.com/docs/components/listItem_accordion#props
@@ -15,43 +14,15 @@ import {useQuery} from '@realm/react';
 import {ScrollView} from 'react-native';
 import {ListItem, Text} from '@rneui/themed';
 import {Medication} from '../realm/models';
-
-// json formatted data to test the display with
-// TODO: switch this out to retrieve local data
-let test_data = [
-  {
-    'name': 'Medication 1',
-    'take': 'twice daily',
-    'additional_info': 'take with meals',
-  },
-  {
-    'name': 'Medication 2',
-    'take': 'once a day',
-    'additional_info': '',
-  },
-  {
-    'name': 'Medication 3',
-    'take': '3x a day',
-    'additional_info': 'take 30mins before meals',
-  }
-];
-
-/**
- * This will be a function to grab the data and format it as needed
- * Possibly not required depending on how data is stored
- */
-function retrieveData() {
-  return test_data;
-}
+import storage from '../storage';
 
 function MedList() {
   const [expanded, setExpanded] = React.useState([0]); // array of currently expanded items
-  const medList = useQuery(Medication);
+  const medList = useQuery(Medication, (meds) => {
+    return meds.filtered('userId = $0', storage.getInt('currentUser'));
+  });;
 
-  // will want to retrieve data upon loading this element
-  // or retrieve when info has been updated
   React.useEffect(() => {
-    retrieveData();
     setExpanded([]);
   }, [setExpanded]);
 

@@ -8,6 +8,9 @@ import { Text, Icon, Button } from "@rneui/themed";
 import {ParamListBase, useNavigation } from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import AuthenticationContext from "./AuthenticationContext";
+import realm from '../realm/models';
+import { User } from "../realm/models";
+import storage from "../storage";
 
 function SignUpScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<ParamListBase>>();
@@ -21,14 +24,25 @@ function SignUpScreen() {
   };
   const { signUp } = React.useContext(AuthenticationContext);
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!email || !password || !firstName || !lastName) {
       Alert.alert('Unfinished Data Entry', 'Please fill in all of the fields.', [{text: 'OK'}]);
       return;
     }
 
     const data = {'FirstName': firstName, 'LastName': lastName, 'Email': email, 'Password': password};
-    signUp(data);
+    await signUp(data);
+
+    // add user to Realm
+    realm.write(() => {
+      realm.create(User, {
+        userId: storage.getInt('currentUser'),
+        firstName: firstName,
+        lastName: lastName,
+        email: email,
+      });
+    });
+
     navigation.navigate('Login');
   }
 

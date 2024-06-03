@@ -12,7 +12,7 @@ CREATE TABLE Users (
 );
 
 CREATE TABLE Medications (
-    MedicationID INT AUTO_INCREMENT PRIMARY KEY,
+    MedicationID CHAR(36) PRIMARY KEY DEFAULT (uuid()),
     UserID INT NOT NULL,
     Name VARCHAR(50) NOT NULL,
     Dosage INT NOT NULL DEFAULT 1,

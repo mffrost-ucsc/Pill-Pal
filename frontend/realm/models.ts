@@ -13,30 +13,27 @@ interface Dosage extends Dictionary {
   timesPerInterval?: number; // number of times in that interval (like 2x per day)
 }
 
-interface Login extends Dictionary {
-    userName?: string;
-    password?: string
-}
-
 export class User extends Realm.Object<User> {
-    _id!: BSON.ObjectId;
-    userName!: string;
-    password!: string
+    userId!: number;
+    firstName!: string;
+    lastName!: string;
+    email!: string;
 
     static schema: Realm.ObjectSchema = {
-    name: 'User',
-    properties: {
-      _id: {type: 'objectId', default: () => new BSON.ObjectId()},
-      userName: 'string',
-      password: 'string',
-    },
-    primaryKey: '_id',
-  };
-
+      name: 'User',
+      properties: {
+        userId: 'int',
+        firstName: 'string',
+        lastName: 'string',
+        email: 'string',
+      },
+      primaryKey: 'userId',
+    };
 }
 
 export class Medication extends Realm.Object<Medication> {
-  _id!: BSON.ObjectId; // unique id for each med (generated automatically)
+  _id!: BSON.UUID; // unique id for each med
+  userId!: number; // id of the user
   name!: string; // name of the med
   dosage!: Dosage; // see dictionary above
   lastAsked?: Date; // last time asked if taken
@@ -47,21 +44,24 @@ export class Medication extends Realm.Object<Medication> {
   refillAmount?: number;
   refillReminderCount?: number;
   pillCount?: number;
+  lastModified!: Date;
 
   static schema: Realm.ObjectSchema = {
     name: 'Medication',
     properties: {
-      _id: {type: 'objectId', default: () => new BSON.ObjectId()},
+      _id: {type: 'uuid', default: () => new BSON.UUID()},
+      userId: 'int',
       name: 'string',
       dosage: 'mixed{}',
       lastAsked: 'date?',
-      extraInfo: 'string',
-      takeReminder: 'bool',
-      reminderId: 'string[]',
-      refillReminder: 'bool',
-      refillAmount: 'int',
-      refillReminderCount: 'int',
-      pillCount: 'int',
+      extraInfo: 'string?',
+      takeReminder: {type: 'bool', default: false},
+      reminderId: 'string?[]',
+      refillReminder: {type: 'bool', default: false},
+      refillAmount: 'int?',
+      refillReminderCount: 'int?',
+      pillCount: 'int?',
+      lastModified: {type: 'date', default: () => new Date()},
     },
     primaryKey: '_id',
   };
@@ -71,6 +71,7 @@ export class MedLog extends Realm.Object<MedLog> {
   name!: string; // name of the med
   amount!: number; // number of pills taken
   date!: Date; // date/time taken
+  userId!: number; // id of the user
 
   static schema: Realm.ObjectSchema = {
     name: 'MedLog',
@@ -78,6 +79,10 @@ export class MedLog extends Realm.Object<MedLog> {
       name: 'string',
       amount: 'int',
       date: 'date',
+      userId: 'int',
     },
   };
 }
+
+let realm = new Realm({ schema: [User, Medication, MedLog] })
+export default realm;

@@ -2,6 +2,6 @@
 <Workspace
    version = "1.0">
    <FileRef
-      location = "self:">
+      location = "self:/Users/mirandafrost/Projects/Pill-Pal/frontend/ios/Pill Pal.xcodeproj">
    </FileRef>
 </Workspace>

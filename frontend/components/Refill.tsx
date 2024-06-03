@@ -1,11 +1,11 @@
 import React from 'react';
 import {View} from 'react-native';
 import {Medication} from '../realm/models';
-import {useQuery, useRealm} from '@realm/react';
+import {useQuery} from '@realm/react';
+import realm from '../realm/models';
 import notifee, {EventType} from '@notifee/react-native';
 
 function Refill() {
-  const realm = useRealm();
   const meds = useQuery(Medication);
 
   // function to send the refill reminder

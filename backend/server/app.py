@@ -64,7 +64,7 @@ def login():
 
     if row and checkpw(row[0]['PasswordHash'], pword.encode()):
         token = create_access_token(identity=row[0]['UserID'])
-        return jsonify({'message': 'Login Success', 'token': token})
+        return jsonify({'message': 'Login Success', 'token': token, 'userId': row[0]['UserID']})
     else:
         return jsonify({'message': 'Login Failed'}), 401
 
@@ -82,12 +82,13 @@ def add_user():
     data = request.json
     rows = exec_sql('SELECT UserID FROM Users WHERE Email = %s', (data['Email'],))
     if len(rows) != 0:
-        return jsonify({"status": "fail", "message": "Error: user already exists"})
+        return jsonify({"status": "fail", "message": "Error: user already exists"}), 403
     try:
         query = '''INSERT INTO Users(FirstName, LastName, Email, PasswordHash) VALUES (%s, %s, %s, %s)'''
         values = (data['FirstName'], data['LastName'], data['Email'], hashpw(data['Password']))
-        exec_sql(query, values, commit=True)
-        return jsonify({"status": "success", "message": "User added successfully"}), 201
+        userId = exec_sql(query, values, commit=True, last_insert_id=True)
+        print('userId is ' + str(userId), file=sys.stderr)
+        return jsonify({"status": "success", "message": "User added successfully", 'userId': userId}), 201
     except mysql.connector.Error as e:
         return jsonify({"status": "fail", "message": str(e)}), 500
 
@@ -135,17 +136,17 @@ def add_med():
     data = request.json
 
     try:
-        query = 'INSERT INTO Medications(UserID, Name, Dosage, Frequency, TimesPerInterval, Modified'
-        values = [uid, data['Name'], data['Dosage'], data['Frequency'], data['TimesPerInterval'], now_str()]
+        query = 'INSERT INTO Medications(MedicationID, UserID, Name, Dosage, Frequency, TimesPerInterval, Modified'
+        values = [data['MedicationID'], uid, data['Name'], data['Dosage'], data['Frequency'], data['TimesPerInterval'], now_str()]
         if 'AdditionalInfo' in data:
             query += ', AdditionalInfo'
             values.append(data['AdditionalInfo'])
-        query += ') VALUES (%s, %s, %s, %s, %s, %s'
+        query += ') VALUES (%s, %s, %s, %s, %s, %s, %s'
         if 'AdditionalInfo' in data:
             query += ', %s'
         query += ')'
-        id = exec_sql(query, tuple(values), commit=True, last_insert_id=True)
-        return jsonify({"status": "success", "message": "Medication added successfully", "id": id}), 201
+        exec_sql(query, tuple(values), commit=True)
+        return jsonify({"status": "success", "message": "Medication added successfully"}), 201
     except mysql.connector.Error as e:
         return jsonify({"status": "fail", "message": str(e)}), 500
 

@@ -1,5 +1,6 @@
 import Realm, {BSON} from 'realm';
 import {Medication, MedLog} from './realm/models';
+import storage from './storage';
 
 export function toAsk(meds: Realm.Results<Medication>): Medication | null {
   for (const med of meds) {
@@ -26,6 +27,7 @@ export function logTaken(realm: Realm, med: Medication) {
       name: med.name,
       amount: med.dosage.amountPerDose ? +med.dosage.amountPerDose : 1,
       date: new Date(),
+      userId: storage.getInt('currentUser'),
     });
   });
   console.log('Took ' + med.name + ' at ' + new Date().toString() + '.');

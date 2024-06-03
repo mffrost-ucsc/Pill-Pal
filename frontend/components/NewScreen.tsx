@@ -22,11 +22,11 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import {RealmProvider} from '@realm/react';
 import {Medication} from '../realm/models';
-import { TestAdd } from './TestAdd';
 import Section from './Section'
 import {NotificationButton, ReoccurringNotification} from './Notifications';
 import MedList from './MedList';
 import NavigateButton from './ButtonWithNavigation';
+import AddMedication from './AddMedication';
 
 
 const NewScreen: React.FC = () => {
@@ -38,7 +38,7 @@ const NewScreen: React.FC = () => {
             rowGap: 16
           }}
         >
-          <TestAdd/>
+          <AddMedication/>
         </ScrollView>
     </View>
 
