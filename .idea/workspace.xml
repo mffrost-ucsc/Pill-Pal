@@ -5,14 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="6059856d-ea66-44c4-92da-f81426d05d03" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/frontend/components/AddUser.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/components/AppNavigator.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/components/SignupScreen.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/App.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/App.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/components/CreateUser.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/components/LoginScreen.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/components/LoginScreen.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/components/Test.tsx" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
