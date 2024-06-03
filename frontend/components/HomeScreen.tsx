@@ -18,7 +18,9 @@ import storage from '../storage';
 import moment from 'moment'; // for formatting date
 
 function HomeScreen(){
-  const localMedList = useQuery(Medication);
+  const localMedList = useQuery(Medication, (meds) => {
+    return meds.filtered('userId = $0', storage.getInt('currentUser'));
+  });
   let dbInfo:Array<any> = [];
   const authToken = storage.getString('userToken');
   const { signOut } = React.useContext(AuthenticationContext);

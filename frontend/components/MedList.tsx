@@ -20,7 +20,7 @@ function MedList() {
   const [expanded, setExpanded] = React.useState([0]); // array of currently expanded items
   const medList = useQuery(Medication, (meds) => {
     return meds.filtered('userId = $0', storage.getInt('currentUser'));
-  });;
+  });
 
   React.useEffect(() => {
     setExpanded([]);
