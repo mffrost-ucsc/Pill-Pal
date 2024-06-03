@@ -29,6 +29,7 @@ import {MedFrequencyProvider} from './components/MedFrequencyContext';
 import {IsMedReminderProvider} from './components/IsMedReminderContext';
 import { RefillInfoProvider } from './components/RefillInfoContext';
 import { IsRefillReminderProvider } from './components/IsRefillReminderContext';
+import { EditMedProvider } from './components/EditMedContext';
 import {ServerAddr, ServerPort} from './communication';
 import AuthenticationContext from './components/AuthenticationContext';
 import storage from './storage';
@@ -216,27 +217,29 @@ function App(): React.JSX.Element {
             <IsMedReminderProvider>
               <IsRefillReminderProvider>
                 <RefillInfoProvider>
-                  <NavigationContainer>
-                    <Stack.Navigator>
-                      {(state.userToken == null) ? (
-                        <>
-                          <Stack.Screen name="Login"
-                            component={LoginScreen}
-                            options={{
-                              animationTypeForReplace: state.isSignout ? 'pop' : 'push',
-                            }}
-                          />
-                          <Stack.Screen name="Sign Up"
-                            component={SignUpScreen}
-                          />
-                        </>
-                      ) : (
-                        <>
-                            <Stack.Screen options={{headerShown: false}} name="HomeScreen" component={HomeNavigation} />
-                        </>
-                      )}
-                    </Stack.Navigator>
-                  </NavigationContainer>
+                  <EditMedProvider>
+                    <NavigationContainer>
+                      <Stack.Navigator>
+                        {(state.userToken == null) ? (
+                          <>
+                            <Stack.Screen name="Login"
+                              component={LoginScreen}
+                              options={{
+                                animationTypeForReplace: state.isSignout ? 'pop' : 'push',
+                              }}
+                            />
+                            <Stack.Screen name="Sign Up"
+                              component={SignUpScreen}
+                            />
+                          </>
+                        ) : (
+                          <>
+                              <Stack.Screen options={{headerShown: false}} name="HomeScreen" component={HomeNavigation} />
+                          </>
+                        )}
+                      </Stack.Navigator>
+                    </NavigationContainer>
+                  </EditMedProvider>
                 </RefillInfoProvider>
               </IsRefillReminderProvider>
             </IsMedReminderProvider>

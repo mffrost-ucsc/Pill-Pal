@@ -3,6 +3,7 @@ import React from 'react';
 import {
   SafeAreaView,
   ScrollView,
+  Alert,
 } from 'react-native';
 import {Button} from '@rneui/themed';
 import {ServerAddr, ServerPort} from '../communication';
@@ -57,6 +58,7 @@ function HomeScreen(){
     })
     .catch((error) => {
       if (error.status == 401) {
+        Alert.alert('Invalid Credentials', 'Please login again.', [{text: 'OK'}]);
         signOut();
       } else {
         console.log(`ERROR: ${JSON.stringify(error)}`);
@@ -101,6 +103,7 @@ function HomeScreen(){
     })
     .catch((error) => {
       if (error.status == 401) {
+        Alert.alert('Invalid Credentials', 'Please login again.', [{text: 'OK'}]);
         signOut();
       } else {
         console.log(`ERROR: ${JSON.stringify(error)}`);
@@ -144,6 +147,7 @@ function HomeScreen(){
     })
     .catch((error) => {
       if (error.status == 401) {
+        Alert.alert('Invalid Credentials', 'Please login again.', [{text: 'OK'}]);
         signOut();
       } else {
         if (error.status == 401) {

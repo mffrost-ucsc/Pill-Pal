@@ -1,5 +1,5 @@
 /**
- * This is just a test component to see if the realm is working correctly
+ * This component handles adding a new medication. 
  * References: 
  *  - https://www.mongodb.com/docs/atlas/device-sdks/sdk/react-native/quick-start/
  *  - https://hossein-zare.github.io/react-native-dropdown-picker-website/docs/usage
@@ -85,13 +85,10 @@ function AddMedication() {
     })
     .catch((error) => {
       if (error.status == 401) {
+        Alert.alert('Invalid Credentials', 'Please login again.', [{text: 'OK'}]);
         signOut();
       } else {
-        if (error.status == 401) {
-          signOut();
-        } else {
-          console.log(`ERROR: ${JSON.stringify(error)}`);
-        }
+        console.log(`ERROR: ${JSON.stringify(error)}`);
       }
     });
   }
@@ -201,14 +198,6 @@ function AddMedication() {
     );
   };
 
- const deleteAll = () => {
-    const toDelete = realm
-      .objects(Medication)
-    realm.write(() => {
-      realm.delete(toDelete);
-    });
-  }
-
   const setFrequency = (newVal:number) => {
     //setDosageFrequency(newVal);
     const newTuple:[number, string] = [... medFrequencyContext!.medFrequency];
@@ -277,10 +266,6 @@ function AddMedication() {
       <Button
         title="Add Med"
         onPress={addMed}
-      />
-      <Button
-        title="Delete Meds"
-        onPress={deleteAll}
       />
     </ScrollView>
   );
