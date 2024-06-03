@@ -1,3 +1,4 @@
+
 /**
  * This is just a test component to see if the realm is working correctly
  * Reference: https://www.mongodb.com/docs/atlas/device-sdks/sdk/react-native/quick-start/
