@@ -7,6 +7,7 @@ import {
   StatusBar,
   StyleSheet,
   Text,
+  TextInput,
   useColorScheme,
   View,
   Image,
@@ -18,16 +19,18 @@ import {
   LearnMoreLinks,
   ReloadInstructions,
 } from 'react-native/Libraries/NewAppScreen';
+import {Button} from '@rneui/themed';
 import { NavigationContainer } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import {RealmProvider} from '@realm/react';
+
 
 import Section from './Section'
 import NavigateButton from './ButtonWithNavigation';
 import LoginButton from './LoginButton';
 import Logo from '../pillHome.png';
 import {User} from '../realm/models';
-import { CreateUser } from './CreateUser';
+
 
 const styles = StyleSheet.create({
   logo: {
@@ -37,6 +40,7 @@ const styles = StyleSheet.create({
 });
 
 function LoginScreen(){
+    const navigation = useNavigation()
 
     const isDarkMode = useColorScheme() === 'dark';
 
@@ -54,10 +58,22 @@ function LoginScreen(){
                   backgroundColor={backgroundStyle.backgroundColor}
                 />
                     <Image style={styles.logo} source={require('../pillHome.png')}/>
-                    <CreateUser/>
-                    <LoginButton routeName={'HomeScreen'}/>
-
-
+                    <View style={{flexDirection:'column', gap: 10}}>
+                    <Text>{'Login'}</Text>
+                    <TextInput
+                      placeholder="User Name"
+                    />
+                    <TextInput
+                      placeholder="Password"
+                    />
+                    <Button
+                      title="Login"
+                    />
+                    <Button
+                      title="Sign Up"
+                      onPress={() => navigation.navigate("SignupScreen")}
+                    />
+                  </View>
               </SafeAreaView>
         );
 }

@@ -34,17 +34,11 @@ import {
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
-import {RealmProvider} from '@realm/react';
-import {Medication} from './realm/models';
-import Test from './components/Test';
-import {NotificationButton, ReoccurringNotification} from './components/Notifications';
-import MedList from './components/MedList';
-import { TestAdd } from './components/TestAdd';
-import NavigateButton from './components/ButtonWithNavigation';
 import HomeScreen from './components/HomeScreen';
 import NewScreen from './components/NewScreen';
 import LoginScreen from './components/LoginScreen';
-import LoginButton from './components/LoginButton';
+import SignupScreen from './components/SignupScreen';
+
 
 type SectionProps = PropsWithChildren<{
   title: string;
@@ -53,22 +47,39 @@ type SectionProps = PropsWithChildren<{
 const Stack = createNativeStackNavigator();
 
 function App(): React.JSX.Element {
+
   const isDarkMode = useColorScheme() === 'dark';
 
   const backgroundStyle = {
     backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
   };
 
-  return (
-    <NavigationContainer>
-        <Stack.Navigator initialRouteName="LoginScreen">
-            <Stack.Screen name="LoginScreen" component={LoginScreen} />
-            <Stack.Screen name="HomeScreen" component={HomeScreen} />
-            <Stack.Screen name="NewScreen" component={NewScreen} />
-        </Stack.Navigator>
-       </NavigationContainer>
-  );
-}
+  const renderContent = () => {
+    const isLoggedIn = false;
+
+    if (isLoggedIn) {
+        return (
+            <NavigationContainer>
+                <Stack.Navigator initialRouteName="HomeScreen">
+                    <Stack.Screen name="HomeScreen" component={HomeScreen} />
+                    <Stack.Screen name="NewScreen" component={NewScreen} />
+                </Stack.Navigator>
+               </NavigationContainer>
+          );
+    }
+    return (
+        <NavigationContainer>
+            <Stack.Navigator initialRouteName="LoginScreen">
+                <Stack.Screen name="LoginScreen" component={LoginScreen} />
+                <Stack.Screen name="SignupScreen" component={SignupScreen} />
+            </Stack.Navigator>
+        </NavigationContainer>
+    );
+  };
+
+  return(renderContent());
+
+};
 
 const styles = StyleSheet.create({
   sectionContainer: {
