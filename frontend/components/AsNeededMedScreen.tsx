@@ -2,7 +2,7 @@
 import { useQuery } from "@realm/react";
 import { Medication } from "../realm/models";
 import storage from "../storage";
-import { SafeAreaView, ScrollView } from "react-native";
+import { SafeAreaView, ScrollView, Alert } from "react-native";
 import { ListItem, Button } from "@rneui/themed";
 import { logTaken } from "../log";
 import realm from "../realm/models";
@@ -27,7 +27,13 @@ function AsNeededMedScreen() {
                   </ListItem.Subtitle>
                 }
               </ListItem.Content>
-              <Button onPress={() => logTaken(realm, med)}>Log</Button>
+              <Button onPress={() => {
+                  Alert.alert('Medication Logged', 'Log added.', [{text: 'OK'}]);
+                  logTaken(realm, med)
+                }}
+              >
+                Log
+              </Button>
             </>
           </ListItem>
         ))}

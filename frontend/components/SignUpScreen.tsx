@@ -1,5 +1,7 @@
 /**
  * Screen to let the user create an account
+ * References:
+ *  - https://www.simplilearn.com/tutorials/javascript-tutorial/email-validation-in-javascript
  */
 
 import React from "react";
@@ -27,6 +29,12 @@ function SignUpScreen() {
   const handleSubmit = async () => {
     if (!email || !password || !firstName || !lastName) {
       Alert.alert('Unfinished Data Entry', 'Please fill in all of the fields.', [{text: 'OK'}]);
+      return;
+    }
+
+    const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/;
+    if (!email.match(emailRegex)) {
+      Alert.alert('Invalid Email', 'Invalid email address. Please use format: example@email.com', [{text: 'OK'}]);
       return;
     }
 

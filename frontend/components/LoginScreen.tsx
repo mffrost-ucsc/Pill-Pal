@@ -70,7 +70,11 @@ function LoginScreen(){
             style={{paddingHorizontal: '25%', paddingVertical: '5%'}}
           />
         </View>
-        <Text onPress={() => navigation.navigate('Sign Up')}
+        <Text onPress={() => {
+            setEmail('');
+            setPassword('');
+            navigation.navigate('Sign Up');
+          }}
           style={{paddingTop: '5%', textAlign: 'center'}}
         >
           {`Don't Have An Account?\nClick Here to Create One.`}

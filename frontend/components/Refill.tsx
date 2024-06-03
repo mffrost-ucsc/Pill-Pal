@@ -1,12 +1,14 @@
 import React from 'react';
-import {View} from 'react-native';
 import {Medication} from '../realm/models';
 import {useQuery} from '@realm/react';
 import realm from '../realm/models';
 import notifee, {EventType} from '@notifee/react-native';
+import storage from '../storage';
 
 function Refill() {
-  const meds = useQuery(Medication);
+  const meds = useQuery(Medication, (meds) => {
+    return meds.filtered('userId = $0', storage.getInt('currentUser'));
+  });
 
   // function to send the refill reminder
   const sendRefillReminder = async (med:Medication) => {

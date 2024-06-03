@@ -89,7 +89,10 @@ function MedList() {
 
   return(
     <ScrollView>
-      {medList.map((med, i) => (
+      <Text h4 style={{paddingTop: '5%', paddingBottom: '2%'}}>Current Medications:</Text>
+      { (medList.length == 0) ?
+      <Text>You currently have no medications. Use the side menu to navigate to 'Add Medication'</Text> :
+      medList.map((med, i) => (
         <ListItem.Accordion
           key={i}
           icon={{name:'chevron-down', type:'material-community'}}
@@ -148,7 +151,8 @@ function MedList() {
             />
           </View>
         </ListItem.Accordion>
-      ))}
+      ))
+      }
     </ScrollView>
   );
 }
