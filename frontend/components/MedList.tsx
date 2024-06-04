@@ -31,10 +31,6 @@ function MedList() {
   });
   const { signOut } = React.useContext(AuthenticationContext);
 
-  React.useEffect(() => {
-    setExpanded([]);
-  }, [setExpanded]);
-
   const deleteMed = (med:any) => {
     // delete med from database
     let url = 'http://' + ServerAddr + ':' + ServerPort + '/medication';
@@ -79,6 +75,7 @@ function MedList() {
     });
     console.log('med deleted from realm');
 
+    setExpanded([]); // closes all opened accordions
     return;
   }
 
@@ -86,6 +83,10 @@ function MedList() {
     editMedContext!.setMedId(med._id);
     navigation.navigate('Edit Medication');
   }
+
+  React.useEffect(() => {
+    setExpanded([]);
+  }, [setExpanded]);
 
   return(
     <ScrollView>

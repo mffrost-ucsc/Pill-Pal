@@ -6,27 +6,6 @@ import {Medication} from '../realm/models';
 import {useRealm, useQuery} from '@realm/react';
 import Realm from 'realm';
 
-function testMeds(realm: Realm): void {
-  realm.write(() => {
-    realm.deleteAll();
-    realm.create(Medication, {
-      name: 'med1',
-      dosage: {amountPerDose: 1, interval: 'daily', timesPerInterval: 1},
-      extraInfo: '',
-    });
-    realm.create(Medication, {
-      name: 'med2',
-      dosage: {amountPerDose: 2, interval: 'weekly', timesPerInterval: 1},
-      extraInfo: '',
-    });
-    realm.create(Medication, {
-      name: 'med3',
-      dosage: {amountPerDose: 3, interval: 'monthly', timesPerInterval: 1},
-      extraInfo: '',
-    });
-  });
-}
-
 function popupContents(
   realm: Realm,
   med: Medication,

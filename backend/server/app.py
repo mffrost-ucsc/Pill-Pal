@@ -2,7 +2,7 @@
 #   - https://www.linkedin.com/pulse/building-flask-application-mysql-database-using-docker-agarwal/from flask import Flask, jsonify, request
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity, get_jwt
 from flask import Flask, jsonify, request
-from datetime import datetime
+from datetime import datetime, timedelta
 import mysql.connector
 import bcrypt
 import sys
@@ -11,6 +11,7 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your_strong_secret_key'
 app.config["JWT_SECRET_KEY"] = 'your_jwt_secret_key'
 app.config['JWT_TOKEN_LOCATION'] = ['headers']
+app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(days=30)
 jwt = JWTManager(app)
 
 # configure MySQL database

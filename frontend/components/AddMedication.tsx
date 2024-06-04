@@ -140,23 +140,30 @@ function AddMedication() {
     // set up reminders
     if (isMedReminderContext!.isMedReminder) {
       for (let i = 0; i < medReminderTimesContext!.medReminderTimes.length; i++) {
-        if (medFrequencyContext!.medFrequency[1] && medReminderTimesContext!.medReminderTimes[i] /*&& medReminderTimesContext!.medReminderTimes[i].hour <= 12 && medReminderTimesContext!.medReminderTimes[i].hour > 0 && medReminderTimesContext!.medReminderTimes[i].min <= 60 && medReminderTimesContext!.medReminderTimes[i].min >= 0 && ((medFrequencyContext!.medFrequency[1] == 'weekly') ? (medReminderTimesContext!.medReminderTimes[i].day.length > 0) : true)*/) {
-          const newId = uuidv4();
-          reminderIds.push(newId);
-          setReminder(
-            i,
-            newId,
-            medName,
-            dosageAmount,
-            medFrequencyContext!.medFrequency[1],
-            medReminderTimesContext!.medReminderTimes,
-            taken => {
-              logAsked(realm, med);
-              if (taken) {
-                logTaken(realm, med);
-              }
-            },
-          );
+        if (medFrequencyContext!.medFrequency[1] &&
+          medReminderTimesContext!.medReminderTimes[i] &&
+          medReminderTimesContext!.medReminderTimes[i].period &&
+          medReminderTimesContext!.medReminderTimes[i].hours <= 12 &&
+          medReminderTimesContext!.medReminderTimes[i].hours > 0 &&
+          medReminderTimesContext!.medReminderTimes[i].mins <= 60 &&
+          medReminderTimesContext!.medReminderTimes[i].mins >= 0 &&
+          ((medFrequencyContext!.medFrequency[1] == 'weekly') ? (medReminderTimesContext!.medReminderTimes[i].day >= 0) : true)) {
+            const newId = uuidv4();
+            reminderIds.push(newId);
+            setReminder(
+              i,
+              newId,
+              medName,
+              dosageAmount,
+              medFrequencyContext!.medFrequency[1],
+              medReminderTimesContext!.medReminderTimes,
+              taken => {
+                logAsked(realm, med);
+                if (taken) {
+                  logTaken(realm, med);
+                }
+              },
+            );
         } else {
           Alert.alert('Unfinished or Invalid Data Entry', 'Please fill in the Reminder fields properly.', [{text: 'OK'}]);
           const times = JSON.stringify(medReminderTimesContext!.medReminderTimes);
@@ -183,9 +190,7 @@ function AddMedication() {
     setExInfo('');
     setTimeBetweenDose(NaN);
     isMedReminderContext!.setIsMedReminder(false);
-    if (medReminderTimesContext) {
-      medReminderTimesContext.setMedReminderTimes([]);
-    }
+    medReminderTimesContext!.setMedReminderTimes([]);
     isRefillReminderContext!.setIsRefillReminder(false);
     refillInfoContext?.setRefillInfo([NaN, NaN, NaN]);
     console.log('med added');

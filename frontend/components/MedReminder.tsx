@@ -4,19 +4,32 @@
  */
 
 import React, {useState} from 'react';
-import {Text, TextInput, View, Alert} from 'react-native';
+import {Text, TextInput, View, Alert, Platform} from 'react-native';
 import {CheckBox} from '@rneui/themed';
 import notifee, {AndroidNotificationSetting, TimestampTrigger, TriggerType, RepeatFrequency, AndroidImportance, AndroidVisibility, EventType, EventDetail} from '@notifee/react-native';
 import DropDownPicker from 'react-native-dropdown-picker';
 import {MedReminderTimesContext} from './MedReminderTimesContext';
 import {MedFrequencyContext} from './MedFrequencyContext';
 import {IsMedReminderContext} from './IsMedReminderContext';
-import {logAsked, logTaken} from '../log';
+import { AuthorizationStatus } from '@notifee/react-native';
 
-export async function setReminder(index:number, notifId:string, medName:string, dosageAmount:string, value:string, reminderTimes:any[], onResponse:(taken: bool) => void) {
+export async function setReminder(index:number, notifId:string, medName:string, dosageAmount:string, value:string, reminderTimes:any[], onResponse:(taken: boolean) => void) {
   const settings = await notifee.getNotificationSettings();
-  const date = new Date(Date.now());
+  const date = new Date();
   let interval;
+
+  // Request permissions (ios)
+  await notifee.requestPermission({
+    announcement: true,
+  });
+
+  // check user permissions and alert if notifications not enabled
+  if (settings.authorizationStatus  == AuthorizationStatus.DENIED) {
+    Alert.alert('Permissions Required', 'Notifications are disabled for this app. Please enable them in the settings if you want to recieve reminders.', [{text: 'OK'}]);
+  } else if (Platform.OS === 'android' && settings.android.alarm == AndroidNotificationSetting.ENABLED) {
+    Alert.alert('Permissions Required', 'Please enable SCHEDULE_EXACT_ALARM permissions in your settings. Otherwise you will not recieve reoccurring notifications from the app.', [{text: 'OK'}]);
+    await notifee.openAlarmPermissionSettings();
+  }
 
   // date takes military time
   if (reminderTimes[index].period == 'PM' && reminderTimes[index].hours != 12) {
@@ -30,80 +43,81 @@ export async function setReminder(index:number, notifId:string, medName:string, 
     date.setHours(reminderTimes[index].hours);
     date.setMinutes(reminderTimes[index].mins);
     interval = RepeatFrequency.DAILY;
+
+    // notifee doesn't accept dates in the past, so increment date by 1 if needed
+    const now = new Date();
+    if (date.getTime() < now.getTime()) {
+      date.setDate(date.getDate() + 1);
+    }
   } else {
     const dist = reminderTimes[index].day - date.getDay();
     date.setDate(date.getDate() + dist);
     date.setHours(reminderTimes[index].hours);
     date.setMinutes(reminderTimes[index].mins);
     interval = RepeatFrequency.WEEKLY;
+
+    // notifee doesn't accept dates in the past, so increment date by 7 if needed
+    const now = new Date();
+    if (date.getTime() < now.getTime()) {
+      date.setDate(date.getDate() + 7);
+    }
   }
 
-  // check for proper settings on android
-  if (settings.android.alarm == AndroidNotificationSetting.ENABLED) {
+  // create a channel (android)
+  const channelId = await notifee.createChannel({
+    id: 'takeMedReminder',
+    name: 'Take Med Reminder Channel',
+  });
 
-    // Request permissions (ios)
-    await notifee.requestPermission({
-      announcement: true,
-    });
+  // Create a time-based trigger
+  const trigger: TimestampTrigger = {
+    type: TriggerType.TIMESTAMP,
+    timestamp: date.getTime(), 
+    repeatFrequency: interval,
+    alarmManager: {
+      allowWhileIdle: true,
+    },
+  };
 
-    // create a channel (android)
-    const channelId = await notifee.createChannel({
-      id: 'takeMedReminder',
-      name: 'Take Med Reminder Channel',
-    });
-
-    // Create a time-based trigger
-    const trigger: TimestampTrigger = {
-      type: TriggerType.TIMESTAMP,
-      timestamp: date.getTime(), 
-      repeatFrequency: interval,
-      alarmManager: {
-        allowWhileIdle: true,
+  // Create a trigger notification
+  await notifee.createTriggerNotification(
+    {
+      id: notifId,
+      title: medName,
+      body: 'Take ' + dosageAmount + ' of ' + medName,
+      android: {
+        channelId: channelId,
+        importance: AndroidImportance.HIGH,
+        visibility: AndroidVisibility.PRIVATE,
+        autoCancel: false,
+        showTimestamp: true,
+        actions: [
+          {
+            title: 'Taken',
+            pressAction: {id: 'yes'},
+          },
+          {
+            title: 'Not Taken',
+            pressAction: {id: 'no'},
+          },
+        ],
       },
-    };
-
-    // Create a trigger notification
-    await notifee.createTriggerNotification(
-      {
-        id: notifId,
-        title: medName,
-        body: 'Take ' + dosageAmount + ' of ' + medName,
-        android: {
-          channelId: channelId,
-          importance: AndroidImportance.HIGH,
-          visibility: AndroidVisibility.PRIVATE,
-          autoCancel: false,
-          showTimestamp: true,
-          actions: [
-            {
-              title: 'Taken',
-              pressAction: {id: 'yes'},
-            },
-            {
-              title: 'Not Taken',
-              pressAction: {id: 'no'},
-            },
-          ],
-        },
-        ios: {
-          categoryId: 'reminder',
-        },
+      ios: {
+        categoryId: 'reminder',
       },
-      trigger,
-    );
-  } else { // inform user they need to change their permissions (android)
-    Alert.alert('Permissions Required', 'Please enable SCHEDULE_EXACT_ALARM permissions in your settings. Otherwise you will not recieve reoccurring notifications from the app.', [{text: 'OK'}]);
-    await notifee.openAlarmPermissionSettings();
-  }
+    },
+    trigger,
+  );
 
   const cb = (type: EventType, detail: EventDetail) => {
+    const { notification, pressAction } = detail;
+
     if (type === EventType.ACTION_PRESS) {
-      if (detail.pressAction.id === 'yes' || detail.pressAction.id === 'no') {
-        onResponse(detail.pressAction.id === 'yes');
+      if (pressAction && (pressAction.id === 'yes' || pressAction.id === 'no')) {
+        onResponse(pressAction.id === 'yes');
       }
       notifee.cancelDisplayedNotification(notifId);
     }
-    console.log('in handler');
   };
 
   notifee.onForegroundEvent(({type, detail}) => {
@@ -113,7 +127,7 @@ export async function setReminder(index:number, notifId:string, medName:string, 
     cb(type, detail);
   });
 
-  console.log('reminder set for ' + reminderTimes[index]);
+  console.log('reminder set for ' + JSON.stringify(reminderTimes[index]));
 }
 
 export const MedReminder = () => {
@@ -206,6 +220,18 @@ export const MedReminder = () => {
       }
     }
   }, [currentPeriodVal]);
+
+  React.useEffect(() => {
+    // reset data fields when isMedReminder becomes false
+    if (!isMedReminderContext!.isMedReminder) {
+      setHour([]);
+      setMin([]);
+      setDayVal([]);
+      setCurrentDay(null);
+      setPeriodVal([]);
+      setCurrentPeriodVal(null);
+    }
+  }, [isMedReminderContext?.isMedReminder]);
 
   const [isSet, setIsSet] = React.useState(false);
   if (!isSet) {
