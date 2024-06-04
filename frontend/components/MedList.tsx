@@ -103,7 +103,7 @@ function MedList() {
                 { 
                   (med.dosage.interval == 'asNeeded') ?
                     <ListItem.Subtitle>
-                      {`Take ${(med.dosage.amountPerDose == 1) ? '1 pill' : med.dosage.amountPerDose + ' pills'} as needed`}
+                      {`Take ${(med.dosage.amountPerDose == 1) ? '1 pill' : med.dosage.amountPerDose + ' pills'} ${(med.dosage.timeBetweenDose) ? ((med.dosage.timeBetweenDose == 1) ? 'every hour ' : 'every ' + med.dosage.timeBetweenDose + ' hours ') : ''}as needed`}
                     </ListItem.Subtitle>
                   :
                   <ListItem.Subtitle>

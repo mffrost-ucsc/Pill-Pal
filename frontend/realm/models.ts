@@ -6,11 +6,11 @@
 import Realm, {BSON, Dictionary} from 'realm';
 
 // dosage info, made dictionary so fields can be separated
-// will probably need to change this as we go
 interface Dosage extends Dictionary {
   amountPerDose?: number; // number of pills per dose 
   interval?: string; // how often (daily, weekly, etc)
   timesPerInterval?: number; // number of times in that interval (like 2x per day)
+  timeBetweenDose?: number; // hours required before taking med again (for as needed meds)
 }
 
 export class User extends Realm.Object<User> {
@@ -44,6 +44,7 @@ export class Medication extends Realm.Object<Medication> {
   refillAmount?: number;
   refillReminderCount?: number;
   pillCount?: number;
+  lastTaken?: Date;
   lastModified!: Date;
 
   static schema: Realm.ObjectSchema = {
@@ -61,6 +62,7 @@ export class Medication extends Realm.Object<Medication> {
       refillAmount: 'int?',
       refillReminderCount: 'int?',
       pillCount: 'int?',
+      lastTaken: 'date?',
       lastModified: {type: 'date', default: () => new Date()},
     },
     primaryKey: '_id',

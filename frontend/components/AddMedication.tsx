@@ -41,6 +41,7 @@ function AddMedication() {
     {label: 'Weekly', value: 'weekly'},
     {label: 'As Needed', value: 'asNeeded'}
   ]);
+  const [timeBetweenDose, setTimeBetweenDose] = React.useState(NaN); // for as needed meds
   const medReminderTimesContext = React.useContext(MedReminderTimesContext);
   const isMedReminderContext = React.useContext(IsMedReminderContext);
   const medFrequencyContext = React.useContext(MedFrequencyContext);
@@ -95,7 +96,7 @@ function AddMedication() {
 
   const addMed = async () => {
     const id = new BSON.UUID();
-    let med: Medication;
+    let med:any;
     const isRefillReminderVal = isRefillReminderContext!.isRefillReminder;
     let reminderIds : string[] = [];
 
@@ -125,9 +126,16 @@ function AddMedication() {
         refillReminder: isRefillReminderVal,
         refillAmount: (isRefillReminderVal) ? refillInfoContext!.refillInfo[0] : undefined,
         refillReminderCount: (isRefillReminderVal) ? refillInfoContext!.refillInfo[1] : undefined,
-        pillCount: (isRefillReminderVal) ? refillInfoContext!.refillInfo[2] : undefined
+        pillCount: (isRefillReminderVal) ? refillInfoContext!.refillInfo[2] : undefined,
       });
     });
+
+    // if med is as needed add timeBetweenDose
+    if (medFrequencyContext!.medFrequency[1] == 'asNeeded') {
+      realm.write(() => {
+        med.dosage.timeBetweenDose = timeBetweenDose;
+      })
+    }
 
     // set up reminders
     if (isMedReminderContext!.isMedReminder) {
@@ -173,6 +181,7 @@ function AddMedication() {
     medFrequencyContext!.setMedFrequency([NaN, '']);
     setValue(null);
     setExInfo('');
+    setTimeBetweenDose(NaN);
     isMedReminderContext!.setIsMedReminder(false);
     if (medReminderTimesContext) {
       medReminderTimesContext.setMedReminderTimes([]);
@@ -251,6 +260,15 @@ function AddMedication() {
           value={(Number.isNaN(medFrequencyContext!.medFrequency[0])) ? '' : String(medFrequencyContext!.medFrequency[0])}
           inputMode='numeric'
           placeholder="Times Per Interval"
+        />
+      </View>
+      <View style={{flexDirection: 'row', gap: 10, flexWrap: 'wrap', display: (medFrequencyContext!.medFrequency[1] == 'asNeeded') ? 'flex' : 'none'}}>
+        <Text>{'Number of Hours Between Doses:'}</Text>
+        <TextInput
+          onChangeText={(newVal) => setTimeBetweenDose(Number(newVal))}
+          value={(Number.isNaN(timeBetweenDose)) ? '' : String(timeBetweenDose)}
+          inputMode='numeric'
+          placeholder="Time Between Doses"
         />
       </View>
       <View style={{flexDirection: 'row', gap: 10}}>

@@ -87,7 +87,6 @@ def add_user():
         query = '''INSERT INTO Users(FirstName, LastName, Email, PasswordHash) VALUES (%s, %s, %s, %s)'''
         values = (data['FirstName'], data['LastName'], data['Email'], hashpw(data['Password']))
         userId = exec_sql(query, values, commit=True, last_insert_id=True)
-        print('userId is ' + str(userId), file=sys.stderr)
         return jsonify({"status": "success", "message": "User added successfully", 'userId': userId}), 201
     except mysql.connector.Error as e:
         return jsonify({"status": "fail", "message": str(e)}), 500
@@ -154,9 +153,7 @@ def add_med():
 @jwt_required()
 def update_med():
     uid = get_jwt_identity()
-    print("uid",file=sys.stderr)
     data = request.json
-    print("data",file=sys.stderr)
     try:
         query = 'UPDATE Medications SET '
         values = []

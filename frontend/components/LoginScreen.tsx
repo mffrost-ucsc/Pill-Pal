@@ -77,7 +77,7 @@ function LoginScreen(){
           }}
           style={{paddingTop: '5%', textAlign: 'center'}}
         >
-          {`Don't Have An Account?\nClick Here to Create One.`}
+          {`Don't Have An Account?\nClick Here to Create One`}
         </Text>
       </ScrollView>
     </SafeAreaView>
