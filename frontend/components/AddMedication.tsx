@@ -11,7 +11,7 @@ import {ScrollView, Text, TextInput, View, Alert} from 'react-native';
 import {Button} from '@rneui/themed';
 import DropDownPicker from 'react-native-dropdown-picker';
 import realm from '../realm/models';
-import {Medication} from '../realm/models';
+import {Medication, Reminder} from '../realm/models';
 import { v4 as uuidv4 } from 'uuid';
 import { BSON } from 'realm';
 import {ParamListBase, useNavigation } from '@react-navigation/native';
@@ -153,10 +153,11 @@ function AddMedication() {
             setReminder(
               i,
               newId,
-              medName,
+              med,
               dosageAmount,
               medFrequencyContext!.medFrequency[1],
               medReminderTimesContext!.medReminderTimes,
+              authToken,
               taken => {
                 logAsked(realm, med);
                 if (taken) {

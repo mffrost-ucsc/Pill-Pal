@@ -26,9 +26,9 @@ CREATE TABLE Medications (
 );
 
 CREATE TABLE Reminders (
-    ReminderID INT AUTO_INCREMENT PRIMARY KEY,
+    ReminderID CHAR(36) PRIMARY KEY DEFAULT (uuid()),
     UserID INT NOT NULL,
-    MedicationID INT NOT NULL,
+    MedicationID CHAR(36) NOT NULL,
     Hour INT NOT NULL,
     Minute INT NOT NULL,
     Day CHAR(2), -- Su, Mo, Tu, We, Th, Fr, Sa

@@ -11,7 +11,7 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your_strong_secret_key'
 app.config["JWT_SECRET_KEY"] = 'your_jwt_secret_key'
 app.config['JWT_TOKEN_LOCATION'] = ['headers']
-app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(days=30)
+app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(days=90)
 jwt = JWTManager(app)
 
 # configure MySQL database
@@ -202,18 +202,19 @@ def add_reminder():
         rows = exec_sql('SELECT MedicationID FROM Medications WHERE MedicationID = %s AND UserID = %s', (data['MedicationID'], uid))
         if len(rows) == 0:
             return jsonify({"status": "fail", "message": "Medication does not exist"}), 404
-        query = 'INSERT INTO Reminders(UserID, MedicationID, Hour, Minute, Modified'
-        values = [uid, data['MedicationID'], data['Hour'], data['Minute'], now_str()]
+        query = 'INSERT INTO Reminders(ReminderID, UserID, MedicationID, Hour, Minute, Modified'
+        values = [data['ReminderID'], uid, data['MedicationID'], data['Hour'], data['Minute'], data['Modified']]
         if 'Day' in data:
             query += ', Day'
             values.append(data['Day'])
-        query += ') VALUES (%s, %s, %s, %s, %s'
+        query += ') VALUES (%s, %s, %s, %s, %s, %s'
         if 'Day' in data:
             query += ', %s'
         query += ')'
-        id = exec_sql(query, tuple(values), commit=True, last_insert_id=True)
-        return jsonify({"status": "success", "message": "Reminder added successfully", "id": id}), 201
+        id = exec_sql(query, tuple(values), commit=True)
+        return jsonify({"status": "success", "message": "Reminder added successfully"}), 201
     except mysql.connector.Error as e:
+        print(str(e), file=sys.stderr)
         return jsonify({"status": "fail", "message": str(e)}), 500
 
 @app.route('/reminder', methods=['POST'])

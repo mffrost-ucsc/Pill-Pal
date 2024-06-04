@@ -13,7 +13,7 @@ import React from 'react';
 import {useQuery} from '@realm/react';
 import {ScrollView, View, Alert} from 'react-native';
 import {ListItem, Text, Icon} from '@rneui/themed';
-import {Medication} from '../realm/models';
+import {Medication, Reminder} from '../realm/models';
 import {ServerAddr, ServerPort} from '../communication';
 import {ParamListBase, useNavigation } from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
@@ -29,7 +29,11 @@ function MedList() {
   const medList = useQuery(Medication, (meds) => {
     return meds.filtered('userId = $0', storage.getInt('currentUser'));
   });
+  const reminders = useQuery(Reminder, (r) => {
+    return r.filtered('userId = $0', storage.getInt('currentUser'));
+  });
   const { signOut } = React.useContext(AuthenticationContext);
+  const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
   const deleteMed = (med:any) => {
     // delete med from database
@@ -84,6 +88,13 @@ function MedList() {
     navigation.navigate('Edit Medication');
   }
 
+  const formatTime = (reminder:any) => {
+    let date = new Date();
+    date.setHours(reminder.hour);
+    date.setMinutes(reminder.minute);
+    return date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+  }
+
   React.useEffect(() => {
     setExpanded([]);
   }, [setExpanded]);
@@ -126,7 +137,20 @@ function MedList() {
           <Text style={{padding: '4%'}}>
             Additional Info: {(med.extraInfo) ? med.extraInfo : "None"}
           </Text>
-          <View style={{flexDirection: 'row', gap: 50, paddingHorizontal: '4%', paddingBottom: '2%'}}>
+          <View style={{paddingHorizontal: '4%', paddingBottom: '4%'}}>
+            <Text>
+              Reminders:
+            </Text>
+            { (med.takeReminder) ?
+              reminders.filtered('medId = $0', med._id).map((reminder, j) => (
+                <Text key={`med ${med._id} reminder${j}`} style={{paddingHorizontal: '6%', paddingTop: '2%'}}>
+                  {`Reminder ${j + 1}: Every ${(med.dosage.interval == 'weekly' && reminder.day != undefined) ? days[reminder.day] : 'day'} at ${formatTime(reminder)}`}
+                </Text>
+              )) :
+              <Text style={{paddingHorizontal: '6%'}}>No reminders are set for this medication.</Text>
+            }
+          </View>
+          <View style={{flexDirection: 'row', gap: 50, paddingHorizontal: '4%', paddingVertical: '2%'}}>
             <Icon
               name='trash-can-outline'
               type='material-community'

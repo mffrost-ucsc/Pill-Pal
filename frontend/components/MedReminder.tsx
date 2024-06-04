@@ -12,8 +12,163 @@ import {MedReminderTimesContext} from './MedReminderTimesContext';
 import {MedFrequencyContext} from './MedFrequencyContext';
 import {IsMedReminderContext} from './IsMedReminderContext';
 import { AuthorizationStatus } from '@notifee/react-native';
+import { Reminder, Medication } from '../realm/models';
+import {ServerAddr, ServerPort} from '../communication';
+import realm from '../realm/models';
+import storage from '../storage';
+import moment from 'moment'; // for formatting date
 
-export async function setReminder(index:number, notifId:string, medName:string, dosageAmount:string, value:string, reminderTimes:any[], onResponse:(taken: boolean) => void) {
+
+function addReminderToDB(reminder:Reminder, token:string) {
+  let header:any = {'Content-Type': 'application/json'};
+  const data:any = {
+    MedicationID: reminder.medId,
+    ReminderID: reminder._id,
+    Hour: reminder.hour,
+    Minute: reminder.minute,
+    Modified: moment(reminder.lastModified).format('YYYY-MM-DD HH:mm:ss')
+  };
+
+  if (reminder.day) {
+    const days = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
+    data['Day'] = days[reminder.day];
+  }
+
+  if (token != null) {
+    header = {'Content-Type': 'application/json', 'Authorization': `Bearer ${token}`}
+  }
+
+  let url = 'http://' + ServerAddr + ':' + ServerPort + '/reminder';
+
+  fetch(url, 
+    {
+      method: 'PUT',
+      headers: header,
+      body: JSON.stringify(data),
+    }
+  )
+  .then((res) => {
+    if (!res.ok) {
+      throw res;
+    }
+
+    console.log('reminder added sucessfully');
+  })
+  .catch((error) => {
+    if (error.status == 401) {
+      Alert.alert('Invalid Credentials', 'Please login again.', [{text: 'OK'}]);
+    } else {
+      console.log(`ERROR: ${JSON.stringify(error)}`);
+    }
+  });
+}
+
+// sets up a reoccurring reminder using notifee
+// does not store the reminder information
+export async function setReminderNoStore(reminder:Reminder, onResponse:(taken: boolean) => void) {
+  const date = new Date();
+  const med = realm.objects(Medication).filtered('_id = $0', reminder.medId)[0];
+  let interval;
+
+  // Request permissions (ios)
+  await notifee.requestPermission({
+    announcement: true,
+  });
+
+  // set time and interval
+  if (reminder.day == null) {
+    date.setHours(reminder.hour);
+    date.setMinutes(reminder.minute);
+    interval = RepeatFrequency.DAILY;
+
+    // notifee doesn't accept dates in the past, so increment date by 1 if needed
+    const now = new Date();
+    if (date.getTime() < now.getTime()) {
+      date.setDate(date.getDate() + 1);
+    }
+  } else {
+    const dist = reminder.day - date.getDay();
+    date.setDate(date.getDate() + dist);
+    date.setHours(reminder.hour);
+    date.setMinutes(reminder.minute);
+    interval = RepeatFrequency.WEEKLY;
+
+    // notifee doesn't accept dates in the past, so increment date by 7 if needed
+    const now = new Date();
+    if (date.getTime() < now.getTime()) {
+      date.setDate(date.getDate() + 7);
+    }
+  }
+
+  // create a channel (android)
+  const channelId = await notifee.createChannel({
+    id: 'takeMedReminder',
+    name: 'Take Med Reminder Channel',
+  });
+
+  // Create a time-based trigger
+  const trigger: TimestampTrigger = {
+    type: TriggerType.TIMESTAMP,
+    timestamp: date.getTime(), 
+    repeatFrequency: interval,
+    alarmManager: {
+      allowWhileIdle: true,
+    },
+  };
+
+  // Create a trigger notification
+  await notifee.createTriggerNotification(
+    {
+      id: reminder._id,
+      title: med.name,
+      body: 'Take ' + med.dosage.amountPerDose + ' of ' + med.name,
+      android: {
+        channelId: channelId,
+        importance: AndroidImportance.HIGH,
+        visibility: AndroidVisibility.PRIVATE,
+        autoCancel: false,
+        showTimestamp: true,
+        actions: [
+          {
+            title: 'Taken',
+            pressAction: {id: 'yes'},
+          },
+          {
+            title: 'Not Taken',
+            pressAction: {id: 'no'},
+          },
+        ],
+      },
+      ios: {
+        categoryId: 'reminder',
+      },
+    },
+    trigger,
+  );
+
+  const cb = (type: EventType, detail: EventDetail) => {
+    const { notification, pressAction } = detail;
+
+    if (type === EventType.ACTION_PRESS) {
+      if (pressAction && (pressAction.id === 'yes' || pressAction.id === 'no')) {
+        onResponse(pressAction.id === 'yes');
+      }
+      notifee.cancelDisplayedNotification(reminder._id);
+    }
+  };
+
+  notifee.onForegroundEvent(({type, detail}) => {
+    cb(type, detail);
+  });
+  notifee.onBackgroundEvent(async ({type, detail}) => {
+    cb(type, detail);
+  });
+
+  console.log('reminder set for ' + date.toDateString());
+}
+
+// sets up a reoccurring reminder using notifee and adds the reminder to realm and the database
+export async function setReminder(index:number, notifId:string, med:Medication, dosageAmount:string, value:string, reminderTimes:any[], token:string, onResponse:(taken: boolean) => void) {
   const settings = await notifee.getNotificationSettings();
   const date = new Date();
   let interval;
@@ -83,8 +238,8 @@ export async function setReminder(index:number, notifId:string, medName:string, 
   await notifee.createTriggerNotification(
     {
       id: notifId,
-      title: medName,
-      body: 'Take ' + dosageAmount + ' of ' + medName,
+      title: med.name,
+      body: 'Take ' + dosageAmount + ' of ' + med.name,
       android: {
         channelId: channelId,
         importance: AndroidImportance.HIGH,
@@ -127,6 +282,20 @@ export async function setReminder(index:number, notifId:string, medName:string, 
     cb(type, detail);
   });
 
+  // add to realm and database
+  let reminder:any;
+  realm.write(() => {
+    reminder = realm.create(Reminder, {
+      _id: notifId,
+      userId: storage.getInt('currentUser'),
+      medId: med._id,
+      hour: date.getHours(),
+      minute: date.getMinutes(),
+      day: (value == 'daily') ? undefined : date.getDay(),
+    });
+  });
+  addReminderToDB(reminder, token);
+
   console.log('reminder set for ' + JSON.stringify(reminderTimes[index]));
 }
 
@@ -139,13 +308,13 @@ export const MedReminder = () => {
   const [dayDropdownOpen, setDayDropdownOpen] = useState<Array<boolean>>([]);
   const [dayVal, setDayVal] = useState<Array<any>>([]);
   const [day, setDay] = useState([
+    {label: 'Sunday', value: 0},
     {label: 'Monday', value: 1},
     {label: 'Tuesday', value: 2},
     {label: 'Wednesday', value: 3},
     {label: 'Thursday', value: 4},
     {label: 'Friday', value: 5},
     {label: 'Saturday', value: 6},
-    {label: 'Sunday', value: 0},
   ]);
   const [periodDropdownOpen, setPeriodDropdownOpen] = useState<Array<boolean>>([]);
   const [periodVal, setPeriodVal] = useState<Array<string>>([]);

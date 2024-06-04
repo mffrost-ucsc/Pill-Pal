@@ -19,7 +19,7 @@ import { Alert } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import {RealmProvider} from '@realm/react';
-import {User, Medication, MedLog} from './realm/models';
+import {User, Medication, Reminder, MedLog} from './realm/models';
 import LoginScreen from './components/LoginScreen';
 import SplashScreen from './components/SplashScreen';
 import SignUpScreen from './components/SignUpScreen';
@@ -31,8 +31,10 @@ import { RefillInfoProvider } from './components/RefillInfoContext';
 import { IsRefillReminderProvider } from './components/IsRefillReminderContext';
 import { EditMedProvider } from './components/EditMedContext';
 import {ServerAddr, ServerPort} from './communication';
+import notifee from '@notifee/react-native'; 
 import AuthenticationContext from './components/AuthenticationContext';
 import storage from './storage';
+var base64js = require('base64-js');
 
 const Stack = createNativeStackNavigator();
 
@@ -160,6 +162,7 @@ function App(): React.JSX.Element {
       },
       signOut: () => {
         storage.setInt('currentUser', NaN);
+        notifee.cancelAllNotifications();
         dispatch({ type: 'SIGN_OUT' });
       },
       signUp: async (data:any) => {
@@ -211,7 +214,7 @@ function App(): React.JSX.Element {
 
   return (
     <AuthenticationContext.Provider value={authContext}>
-      <RealmProvider schema={[User, Medication, MedLog]}>
+      <RealmProvider schema={[User, Medication, Reminder, MedLog]} encryptionKey={base64js.toByteArray(storage.getString('realmKey'))}>
         <MedReminderTimesProvider>
           <MedFrequencyProvider>
             <IsMedReminderProvider>
