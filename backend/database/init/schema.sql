@@ -8,7 +8,8 @@ CREATE TABLE Users (
     FirstName VARCHAR(50),
     LastName VARCHAR(50),
     Email VARCHAR(50) NOT NULL,
-    PasswordHash BINARY(64) NOT NULL
+    PasswordHash BINARY(64) NOT NULL,
+    PasswordSalt BINARY(32) NOT NULL
 );
 
 CREATE TABLE Medications (
