@@ -5,6 +5,7 @@ import {logTaken, logAsked, toAsk} from '../log';
 import {Medication} from '../realm/models';
 import {useRealm, useQuery} from '@realm/react';
 import Realm from 'realm';
+import storage from '../storage';
 
 function popupContents(
   realm: Realm,
@@ -41,8 +42,11 @@ let once = false;
  */
 export default function LogPopup(): React.JSX.Element {
   const realm = useRealm();
-  const meds = useQuery(Medication);
+  const meds = useQuery(Medication, (meds) => {
+    return meds.filtered('userId = $0 && takeReminder = true', storage.getInt('currentUser'));
+  });
   const med = toAsk(meds);
+  const [time, setTime] = useState(Date.now()); // want the component to rerender every hour
 
   if (once) {
     for (const m of meds) {
@@ -52,24 +56,35 @@ export default function LogPopup(): React.JSX.Element {
     }
     once = false;
   }
-  // testMeds(realm);
+
+  React.useEffect(() => {
+    const interval = setInterval(() => setTime(Date.now()), 3600000);
+    return () => {
+      clearInterval(interval);
+    };
+  }, []);
 
   if (!med) {
     return <View />;
   }
 
   return (
-    <View style={styles.centeredView}>
-      <Modal transparent={true}>
-        <View style={styles.centeredView}>
-          <View style={styles.modalView}>
-            {popupContents(realm, med, () => {
-              logAsked(realm, med);
-            })}
+    <>
+      <View style={styles.centeredView}>
+        <Modal transparent={true}>
+          <View style={styles.centeredView}>
+            <View style={styles.modalView}>
+              {popupContents(realm, med, () => {
+                logAsked(realm, med);
+              })}
+            </View>
           </View>
-        </View>
-      </Modal>
-    </View>
+        </Modal>
+      </View>
+      <View style={{display: 'none'}}>
+        <Text>{time}</Text>
+      </View>
+    </>
   );
 }
 

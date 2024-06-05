@@ -1,5 +1,5 @@
 import React from 'react';
-import {View, Text} from 'react-native';
+import {Text, ScrollView} from 'react-native';
 import {MedLog} from '../realm/models';
 import {useQuery} from '@realm/react';
 import storage from '../storage';
@@ -21,7 +21,7 @@ export default function Log(): React.JSX.Element {
       </Text>
     );
   });
-  return <View>{logs}</View>;
+  return <ScrollView>{logs}</ScrollView>;
 }
 
 // vim: ts=2 sw=2

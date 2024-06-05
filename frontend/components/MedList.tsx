@@ -21,6 +21,8 @@ import { EditMedContext } from './EditMedContext';
 import AuthenticationContext from './AuthenticationContext';
 import storage from '../storage';
 import realm from '../realm/models';
+import notifee from '@notifee/react-native';
+
 
 function MedList() {
   const navigation = useNavigation<NativeStackNavigationProp<ParamListBase>>();

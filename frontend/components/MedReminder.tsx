@@ -6,7 +6,7 @@
 import React, {useState} from 'react';
 import {Text, TextInput, View, Alert, Platform} from 'react-native';
 import {CheckBox} from '@rneui/themed';
-import notifee, {AndroidNotificationSetting, TimestampTrigger, TriggerType, RepeatFrequency, AndroidImportance, AndroidVisibility, EventType, EventDetail} from '@notifee/react-native';
+import notifee, {AndroidNotificationSetting, TimestampTrigger, TriggerType, RepeatFrequency, AndroidImportance, AndroidVisibility, EventType, EventDetail, IntervalTrigger, TimeUnit} from '@notifee/react-native';
 import DropDownPicker from 'react-native-dropdown-picker';
 import {MedReminderTimesContext} from './MedReminderTimesContext';
 import {MedFrequencyContext} from './MedFrequencyContext';
@@ -14,10 +14,88 @@ import {IsMedReminderContext} from './IsMedReminderContext';
 import { AuthorizationStatus } from '@notifee/react-native';
 import { Reminder, Medication } from '../realm/models';
 import {ServerAddr, ServerPort} from '../communication';
+import { setCategories } from '../notificationCategories';
+import { logAsked, logTaken } from '../log';
 import realm from '../realm/models';
 import storage from '../storage';
 import moment from 'moment'; // for formatting date
 
+export async function remindIn15(med:Medication, onResponse:(taken: boolean) => void) {
+  // create a channel (android)
+  const channelId = await notifee.createChannel({
+    id: 'takeMedReminder',
+    name: 'Take Med Reminder Channel',
+  });
+
+  // create categories (ios)
+  await setCategories();
+
+  // create interval trigger
+  const trigger: IntervalTrigger = {
+    type: TriggerType.INTERVAL,
+    interval: 15,
+    timeUnit: TimeUnit.MINUTES
+  };
+
+  // Create a trigger notification
+  const notifId = await notifee.createTriggerNotification(
+    {
+      title: med.name,
+      body: 'Take ' + med.dosage.amountPerDose + ' of ' + med.name,
+      android: {
+        channelId: channelId,
+        importance: AndroidImportance.HIGH,
+        visibility: AndroidVisibility.PRIVATE,
+        autoCancel: false,
+        showTimestamp: true,
+        actions: [
+          {
+            title: 'Taken',
+            pressAction: {id: 'confirm'},
+          },
+          {
+            title: 'Remind Later',
+            pressAction: {id: 'wait'}
+          },
+          {
+            title: 'Not Taken',
+            pressAction: {id: 'deny'},
+          },
+        ],
+      },
+      ios: {
+        categoryId: 'takeReminder',
+      },
+    },
+    trigger,
+  );
+
+  const cb = (type: EventType, detail: EventDetail) => {
+    const { notification, pressAction } = detail;
+
+    if (type === EventType.ACTION_PRESS && pressAction) {
+      if (pressAction.id === 'confirm' || pressAction.id === 'deny') {
+        onResponse(pressAction.id === 'confirm');
+      } else if (pressAction.id === 'wait') {
+        remindIn15(med, taken => {
+          logAsked(realm, med);
+          if (taken) {
+            logTaken(realm, med);
+          }
+        },);
+      }
+    }
+  };
+
+  notifee.onForegroundEvent(({type, detail}) => {
+    cb(type, detail);
+  });
+  notifee.onBackgroundEvent(async ({type, detail}) => {
+    cb(type, detail);
+  });
+
+  console.log('created 15min notification');
+}
 
 function addReminderToDB(reminder:Reminder, token:string) {
   let header:any = {'Content-Type': 'application/json'};
@@ -79,6 +157,9 @@ export async function setReminderNoStore(reminder:Reminder, onResponse:(taken: b
     announcement: true,
   });
 
+  // create categories (ios)
+  await setCategories();
+
   // set time and interval
   if (reminder.day == null) {
     date.setHours(reminder.hour);
@@ -135,16 +216,20 @@ export async function setReminderNoStore(reminder:Reminder, onResponse:(taken: b
         actions: [
           {
             title: 'Taken',
-            pressAction: {id: 'yes'},
+            pressAction: {id: 'confirm'},
+          },
+          {
+            title: 'Remind Later',
+            pressAction: {id: 'wait'}
           },
           {
             title: 'Not Taken',
-            pressAction: {id: 'no'},
+            pressAction: {id: 'deny'},
           },
         ],
       },
       ios: {
-        categoryId: 'reminder',
+        categoryId: 'takeReminder',
       },
     },
     trigger,
@@ -153,11 +238,17 @@ export async function setReminderNoStore(reminder:Reminder, onResponse:(taken: b
   const cb = (type: EventType, detail: EventDetail) => {
     const { notification, pressAction } = detail;
 
-    if (type === EventType.ACTION_PRESS) {
-      if (pressAction && (pressAction.id === 'yes' || pressAction.id === 'no')) {
-        onResponse(pressAction.id === 'yes');
+    if (type === EventType.ACTION_PRESS && pressAction) {
+      if (pressAction.id === 'confirm' || pressAction.id === 'deny') {
+        onResponse(pressAction.id === 'confirm');
+      } else if (pressAction.id === 'wait') {
+        remindIn15(med, taken => {
+          logAsked(realm, med);
+          if (taken) {
+            logTaken(realm, med);
+          }
+        },);
       }
-      notifee.cancelDisplayedNotification(reminder._id);
     }
   };
 
@@ -192,7 +283,7 @@ export async function setReminder(index:number, notifId:string, med:Medication, 
 
   // date takes military time
   if (reminderTimes[index].period == 'PM' && reminderTimes[index].hours != 12) {
-    reminderTimes[index].hours = reminderTimes[index].hours + 12;
+    reminderTimes[index].hours = Number(reminderTimes[index].hours) + 12;
   } else if (reminderTimes[index].period == 'AM' && reminderTimes[index].hours == 12) {
     reminderTimes[index].hours = 0;
   }
@@ -228,6 +319,9 @@ export async function setReminder(index:number, notifId:string, med:Medication, 
     name: 'Take Med Reminder Channel',
   });
 
+  // create categories (ios)
+  await setCategories();
+
   // Create a time-based trigger
   const trigger: TimestampTrigger = {
     type: TriggerType.TIMESTAMP,
@@ -253,16 +347,20 @@ export async function setReminder(index:number, notifId:string, med:Medication, 
         actions: [
           {
             title: 'Taken',
-            pressAction: {id: 'yes'},
+            pressAction: {id: 'confirm'},
+          },
+          {
+            title: 'Remind Later',
+            pressAction: {id: 'wait'}
           },
           {
             title: 'Not Taken',
-            pressAction: {id: 'no'},
+            pressAction: {id: 'deny'},
           },
         ],
       },
       ios: {
-        categoryId: 'reminder',
+        categoryId: 'takeReminder',
       },
     },
     trigger,
@@ -271,11 +369,17 @@ export async function setReminder(index:number, notifId:string, med:Medication, 
   const cb = (type: EventType, detail: EventDetail) => {
     const { notification, pressAction } = detail;
 
-    if (type === EventType.ACTION_PRESS) {
-      if (pressAction && (pressAction.id === 'yes' || pressAction.id === 'no')) {
-        onResponse(pressAction.id === 'yes');
+    if (type === EventType.ACTION_PRESS && pressAction) {
+      if (pressAction.id === 'confirm' || pressAction.id === 'deny') {
+        onResponse(pressAction.id === 'confirm');
+      } else if (pressAction.id === 'wait') {
+        remindIn15(med, taken => {
+          logAsked(realm, med);
+          if (taken) {
+            logTaken(realm, med);
+          }
+        },);
       }
-      notifee.cancelDisplayedNotification(notifId);
     }
   };
 

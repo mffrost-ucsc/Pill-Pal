@@ -1,21 +1,45 @@
 import Realm, {BSON} from 'realm';
-import {Medication, MedLog} from './realm/models';
+import realm, {Medication, MedLog, Reminder} from './realm/models';
 import storage from './storage';
 
 export function toAsk(meds: Realm.Results<Medication>): Medication | null {
   for (const med of meds) {
-    const last = med.lastAsked ?? new Date(0);
-    const dosage = med.dosage;
-    const intv = dosage.interval;
-    const now = new Date();
-    const dateDiff = now.getTime() - last.getTime();
-    const dateDiffDays = dateDiff / 1000 / 60 / 60 / 24;
-    if (intv === 'daily' && dateDiffDays >= 1) {
-      return med;
-    } else if (intv === 'weekly' && dateDiffDays >= 7) {
-      return med;
-    } else if (intv === 'monthly' && dateDiffDays >= 28) {
-      return med;
+    const reminders = realm.objects(Reminder).filtered('medId = $0', med._id);
+
+    // dont ask if no reminders set
+    if (reminders.length == 0) {
+      return null;
+    }
+
+    const should = [] // list of when meds should be taken
+    for (const rem of reminders) {
+      let date = new Date();
+      date.setHours(rem.hour);
+      date.setMinutes(rem.minute);
+      if (rem.day) {
+        const now = new Date();
+        const dist = rem.day - date.getDay();
+        date.setDate(date.getDate() + dist);
+        if (date.getTime() < now.getTime()) {
+          date.setDate(date.getDate() + 7);
+        }
+      }
+      should.push(date);
+    }
+
+    // sort should list
+    should.sort((a, b) => a.getTime() - b.getTime());
+
+    // if last time asked is earlier than the reminder, need to send a popup
+    // also check that the difference isn't too big
+    const last = med.lastAsked ?? should[0];
+    for (const remTime of should) {
+      var hourDiff = Math.abs(last.getTime() - remTime.getTime()) / 3600000;
+      if (last.getTime() < remTime.getTime()) { 
+        if (hourDiff < 1) {
+          return med;
+        }
+      }
     }
   }
   return null;

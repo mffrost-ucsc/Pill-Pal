@@ -57,6 +57,7 @@ export class Medication extends Realm.Object<Medication> {
       name: 'string',
       dosage: 'mixed{}',
       lastAsked: 'date?',
+      lastLogged: 'date?',
       extraInfo: 'string?',
       takeReminder: {type: 'bool', default: false},
       reminderId: 'string?[]',

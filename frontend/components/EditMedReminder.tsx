@@ -16,6 +16,9 @@ import { Reminder, Medication } from '../realm/models';
 import {ServerAddr, ServerPort} from '../communication';
 import { EditMedContext } from './EditMedContext';
 import { useObject } from '@realm/react';
+import { remindIn15 } from './MedReminder';
+import { logAsked, logTaken } from '../log';
+import { setCategories } from '../notificationCategories';
 import realm from '../realm/models';
 import storage from '../storage';
 import moment from 'moment'; // for formatting date
@@ -75,6 +78,9 @@ export async function setReminder(index:number, notifId:string, med:Medication, 
     announcement: true,
   });
 
+  // create categories (ios)
+  await setCategories();
+
   // check user permissions and alert if notifications not enabled
   if (settings.authorizationStatus  == AuthorizationStatus.DENIED) {
     Alert.alert('Permissions Required', 'Notifications are disabled for this app. Please enable them in the settings if you want to recieve reminders.', [{text: 'OK'}]);
@@ -85,7 +91,7 @@ export async function setReminder(index:number, notifId:string, med:Medication, 
 
   // date takes military time
   if (reminderTimes[index].period == 'PM' && reminderTimes[index].hours != 12) {
-    reminderTimes[index].hours = +reminderTimes[index].hours + 12;
+    reminderTimes[index].hours = Number(reminderTimes[index].hours) + 12;
   } else if (reminderTimes[index].period == 'AM' && reminderTimes[index].hours == 12) {
     reminderTimes[index].hours = 0;
   }
@@ -146,16 +152,20 @@ export async function setReminder(index:number, notifId:string, med:Medication, 
         actions: [
           {
             title: 'Taken',
-            pressAction: {id: 'yes'},
+            pressAction: {id: 'confirm'},
+          },
+          {
+            title: 'Remind Later',
+            pressAction: {id: 'wait'}
           },
           {
             title: 'Not Taken',
-            pressAction: {id: 'no'},
+            pressAction: {id: 'deny'},
           },
         ],
       },
       ios: {
-        categoryId: 'reminder',
+        categoryId: 'takeReminder',
       },
     },
     trigger,
@@ -164,11 +174,17 @@ export async function setReminder(index:number, notifId:string, med:Medication, 
   const cb = (type: EventType, detail: EventDetail) => {
     const { notification, pressAction } = detail;
 
-    if (type === EventType.ACTION_PRESS) {
-      if (pressAction && (pressAction.id === 'yes' || pressAction.id === 'no')) {
-        onResponse(pressAction.id === 'yes');
+    if (type === EventType.ACTION_PRESS && pressAction) {
+      if (pressAction.id === 'confirm' || pressAction.id === 'deny') {
+        onResponse(pressAction.id === 'confirm');
+      } else if (pressAction.id === 'wait') {
+        remindIn15(med, taken => {
+          logAsked(realm, med);
+          if (taken) {
+            logTaken(realm, med);
+          }
+        },);
       }
-      notifee.cancelDisplayedNotification(notifId);
     }
   };
 
@@ -332,7 +348,6 @@ export const EditMedReminder = () => {
         setMin(minsList);
         setDayVal(dayList);
         setPeriodVal(periodList);
-        console.log(medReminderTimesContext!.medReminderTimes);
       }
     }
   }, [editMedContext?.medId]);
