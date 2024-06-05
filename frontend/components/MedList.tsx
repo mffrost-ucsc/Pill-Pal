@@ -37,7 +37,61 @@ function MedList() {
   const { signOut } = React.useContext(AuthenticationContext);
   const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
+  const deleteReminder = (reminder:any) => {
+    // delete reminder from database
+    let url = 'http://' + ServerAddr + ':' + ServerPort + '/reminder';
+    const authToken = storage.getString('userToken');
+    let header:any = {'Content-Type': 'application/json'};
+
+    if (authToken != null) {
+      header = {'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}`}
+    } else {
+      Alert.alert('Invalid Credentials', 'Please login again.', [{text: 'OK'}]);
+      signOut();
+    }
+
+    fetch(url, 
+      {
+        method: 'DELETE',
+        headers: header,
+        body: JSON.stringify({ReminderID: reminder._id}),
+      }
+    )
+    .then((res) => {
+      if (!res.ok) {
+        throw res;
+      }
+
+      console.log('reminder deleted from server');
+      return;
+    })
+    .catch((error) => {
+      if (error.message == 'Network request failed' || error.status == 404) {
+        Alert.alert('Connection Failed', 'Connection to the server failed. On next login, you may need to redelete this medication.', [{text: 'OK'}]);
+      } else if (error.status == 401) {
+        signOut();
+      } else {
+        console.log(`ERROR: ${JSON.stringify(error)}`);
+      }
+    });
+
+    // delete reminder from realm
+    realm.write(() => {
+      realm.delete(reminder);
+    });
+    console.log('reminder deleted from realm');
+
+    return;
+  }
+
   const deleteMed = (med:any) => {
+    // delete any reminders associated to med
+    const reminderIds = med.reminderId;
+    for (const remId of reminderIds) {
+      const reminder = realm.objects(Reminder).filtered('_id = $0', remId);
+      deleteReminder(reminder);
+    }
+
     // delete med from database
     let url = 'http://' + ServerAddr + ':' + ServerPort + '/medication';
     const authToken = storage.getString('userToken');
@@ -54,7 +108,7 @@ function MedList() {
       {
         method: 'DELETE',
         headers: header,
-        body: JSON.stringify({ReminderID: med._id}),
+        body: JSON.stringify({MedicationID: med._id}),
       }
     )
     .then((res) => {
@@ -150,6 +204,20 @@ function MedList() {
                 </Text>
               )) :
               <Text style={{paddingHorizontal: '6%'}}>No reminders are set for this medication.</Text>
+            }
+          </View>
+          <View style={{paddingHorizontal: '4%', paddingBottom: '4%'}}>
+            <Text>
+              Refill Reminder:
+            </Text>
+            { (med.refillReminder) ?
+              <>
+                <Text style={{paddingHorizontal: '6%', paddingTop: '2%'}}>{`Refill Amount: ${med.refillAmount}`}</Text>
+                <Text style={{paddingHorizontal: '6%', paddingTop: '2%'}}>{`Pills Left Before Reminder: ${med.refillReminderCount}`}</Text>
+                <Text style={{paddingHorizontal: '6%', paddingTop: '2%'}}>{`Current Pill Count: ${med.pillCount}`}</Text>
+              </>
+              :
+              <Text style={{paddingHorizontal: '6%'}}>Refill reminders are not set up for this medication.</Text>
             }
           </View>
           <View style={{flexDirection: 'row', gap: 50, paddingHorizontal: '4%', paddingVertical: '2%'}}>

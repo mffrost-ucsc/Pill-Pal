@@ -444,11 +444,9 @@ export const MedReminder = () => {
     let temp;
     if (field == 'hours') {
       temp = [...hour];
-      console.log('temp before: ' + JSON.stringify(temp));
       temp[index] = Number(newVal);
       setHour(temp);
       newList[index].hours = newVal;
-      console.log('temp after: ' + JSON.stringify(temp));
     } else if (field == 'mins') {
       if (Number(newVal) > 0) {
         newVal = newVal.replace(/^0+/, '');

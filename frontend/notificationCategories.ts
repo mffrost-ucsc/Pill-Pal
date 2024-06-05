@@ -25,5 +25,18 @@ export async function setCategories() {
         },
       ],
     },
+    {
+      id: 'refillReminder',
+      actions: [
+        {
+          title: 'Refilled',
+          id: `yesRefilled`,
+        },
+        {
+          title: 'Not Refilled',
+          id: 'notRefilled',
+        },
+      ],
+    },
   ]);
 }

@@ -17,7 +17,7 @@ import { EditMedReminder, setReminder } from './EditMedReminder';
 import { setReminderNoStore } from './MedReminder';
 import { IsRefillReminderContext } from './IsRefillReminderContext';
 import { RefillInfoContext } from './RefillInfoContext';
-import { RefillReminder } from './RefillReminder';
+import { EditRefillReminder } from './EditRefillReminder';
 import {ServerAddr, ServerPort} from '../communication';
 import { EditMedContext } from './EditMedContext';
 import AuthenticationContext from './AuthenticationContext';
@@ -231,6 +231,10 @@ function EditMedScreen() {
           thisMed.takeReminder = isMedReminderContext!.isMedReminder;
           thisMed.extraInfo = exInfo;
           thisMed.lastModified = new Date();
+          thisMed.refillReminder = isRefillReminderContext!.isRefillReminder;
+          thisMed.refillAmount= (isRefillReminderVal) ? refillInfoContext!.refillInfo[0] : undefined;
+          thisMed.refillReminderCount = (isRefillReminderVal) ? refillInfoContext!.refillInfo[1] : undefined;
+          thisMed.pillCount = (isRefillReminderVal) ? refillInfoContext!.refillInfo[2] : undefined;
       });
 
       // edit med in database
@@ -419,7 +423,7 @@ function EditMedScreen() {
           />
         </View>
         <EditMedReminder/>
-        <RefillReminder/>
+        <EditRefillReminder/>
         <Button
           title="Edit Med"
           onPress={editMed}

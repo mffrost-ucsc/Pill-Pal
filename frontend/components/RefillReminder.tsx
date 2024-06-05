@@ -30,7 +30,7 @@ export const RefillReminder = () => {
                 title="Send Me Reminders to Refill This Medication"
             />
             <View style={{display: (isRefillReminderContext!.isRefillReminder) ? 'flex' : 'none'}}>
-                <View style={{flexDirection: 'row', gap: 10}}>
+                <View style={{flexDirection: 'row', gap: 10, flexWrap: 'wrap', paddingVertical: '2%'}}>
                     <Text>{'Amount Per Refill'}</Text>
                     <TextInput
                         onChangeText={(val) => updateRefillInfo(0, Number(val))}
@@ -39,7 +39,7 @@ export const RefillReminder = () => {
                         placeholder='Refill Amount'
                     />
                 </View>
-                <View style={{flexDirection: 'row', gap: 10}}>
+                <View style={{flexDirection: 'row', gap: 10, flexWrap: 'wrap', paddingVertical: '2%'}}>
                     <Text>{'Number of Pills Left Before Reminder'}</Text>
                     <TextInput
                         onChangeText={(val) => updateRefillInfo(1, Number(val))}
@@ -48,7 +48,7 @@ export const RefillReminder = () => {
                         placeholder='Amount Before Reminder'
                     />
                 </View>
-                <View style={{flexDirection: 'row', gap: 10}}>
+                <View style={{flexDirection: 'row', gap: 10, flexWrap: 'wrap', paddingVertical: '2%'}}>
                     <Text>{'Current Amount'}</Text>
                     <TextInput
                         onChangeText={(val) => updateRefillInfo(2, Number(val))}
