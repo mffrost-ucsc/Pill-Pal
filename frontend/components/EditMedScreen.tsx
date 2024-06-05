@@ -25,7 +25,6 @@ import storage from '../storage';
 import moment from 'moment'; // for formatting date
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useObject } from '@realm/react';
-import { useQuery } from '@realm/react';
 import {logAsked, logTaken} from '../log';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -208,9 +207,11 @@ function EditMedScreen() {
     const reminderTimes = medReminderTimesContext!.medReminderTimes;
     if (isMedReminderContext!.isMedReminder) {
       for (const rem of reminderTimes) {
-        if (!medFrequencyContext!.medFrequency[1] && !rem.period &&
-          !(rem.hours <=12) && !(rem.hours > 0) && !(rem.mins <= 60) && !(rem.mins >= 0) &&
-          !((medFrequencyContext!.medFrequency[1] == 'weekly') ? (rem.day >= 0) : true))
+        if (!(medFrequencyContext!.medFrequency[1] &&
+          rem.period && (rem.hours <= 12) &&
+          (rem.hours > 0) && (rem.mins <= 60) &&
+          (rem.mins >= 0) &&
+          ((medFrequencyContext!.medFrequency[1] == 'weekly') ? (rem.day >= 0) : true)))
         {
           Alert.alert('Unfinished or Invalid Data Entry', 'Please fill in the Reminder fields properly.', [{text: 'OK'}]);
           return;

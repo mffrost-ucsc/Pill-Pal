@@ -115,18 +115,17 @@ function AddMedication() {
     }
 
     // check reminder fields
+    const reminderTimes = medReminderTimesContext!.medReminderTimes;
     if (isMedReminderContext!.isMedReminder) {
-      for (let i = 0; i < medReminderTimesContext!.medReminderTimes.length; i++) {
-        if (!medFrequencyContext!.medFrequency[1] &&
-          !medReminderTimesContext!.medReminderTimes[i] &&
-          !medReminderTimesContext!.medReminderTimes[i].period &&
-          !(medReminderTimesContext!.medReminderTimes[i].hours <= 12) &&
-          !(medReminderTimesContext!.medReminderTimes[i].hours > 0) &&
-          !(medReminderTimesContext!.medReminderTimes[i].mins <= 60) &&
-          !(medReminderTimesContext!.medReminderTimes[i].mins >= 0) &&
-          !((medFrequencyContext!.medFrequency[1] == 'weekly') ? (medReminderTimesContext!.medReminderTimes[i].day >= 0) : true)) {
-            Alert.alert('Unfinished or Invalid Data Entry', 'Please fill in the Reminder fields properly.', [{text: 'OK'}]);
-            return;
+      for (const rem of reminderTimes) {
+        if (!(medFrequencyContext!.medFrequency[1] &&
+          rem.period && (rem.hours <= 12) &&
+          (rem.hours > 0) && (rem.mins <= 60) &&
+          (rem.mins >= 0) &&
+          ((medFrequencyContext!.medFrequency[1] == 'weekly') ? (rem.day >= 0) : true)))
+        {
+          Alert.alert('Unfinished or Invalid Data Entry', 'Please fill in the Reminder fields properly.', [{text: 'OK'}]);
+          return;
         }
       }
     }

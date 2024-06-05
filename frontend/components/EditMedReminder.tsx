@@ -327,18 +327,21 @@ export const EditMedReminder = () => {
           remList.push({'hours': Number(hour), 'mins': Number(reminders[i].minute), 'day': Number(reminders[i].day), 'period': period});
         }
 
-        medReminderTimesContext!.setMedReminderTimes(remList)
+        medReminderTimesContext!.setMedReminderTimes(remList);
         setHour(hoursList);
         setMin(minsList);
         setDayVal(dayList);
         setPeriodVal(periodList);
+        console.log(medReminderTimesContext!.medReminderTimes);
       }
     }
   }, [editMedContext?.medId]);
 
   // reset medReminderTimes if timesPerInterval changes
   React.useEffect(() => {
-    medReminderTimesContext?.setMedReminderTimes([]);
+    if (medFrequencyContext!.medFrequency[0] < medReminderTimesContext!.medReminderTimes.length) {
+      medReminderTimesContext?.setMedReminderTimes([]);
+    }
   }, [medFrequencyContext?.medFrequency])
 
   const [isSet, setIsSet] = React.useState(false);
