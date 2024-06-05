@@ -18,6 +18,7 @@ CREATE TABLE Medications (
     Dosage INT NOT NULL DEFAULT 1,
     Frequency CHAR NOT NULL DEFAULT 'a', -- [d]aily,[w]eekly,[a]s needed
     TimesPerInterval INT DEFAULT 1,
+    TimeBetweenDose INT,
     AdditionalInfo VARCHAR(200),
     Modified TIMESTAMP NOT NULL,
     FOREIGN KEY (UserID) REFERENCES Users(UserID)

@@ -44,7 +44,7 @@ function AddMedication() {
   const [timeBetweenDose, setTimeBetweenDose] = React.useState(NaN); // for as needed meds
   const medReminderTimesContext = React.useContext(MedReminderTimesContext);
   const isMedReminderContext = React.useContext(IsMedReminderContext);
-  const medFrequencyContext = React.useContext(MedFrequencyContext);
+  const medFrequencyContext = React.useContext(MedFrequencyContext); // index 1 is interval (daily, weekly, asNeeded), index 0 is number of times per interval
   const isRefillReminderContext = React.useContext(IsRefillReminderContext);
   const refillInfoContext = React.useContext(RefillInfoContext); // index 0 = refillAmount, 1 = refillReminderCount, 2 = pillCount
   const authToken = storage.getString('userToken');
@@ -58,6 +58,7 @@ function AddMedication() {
       Dosage: newData.dosage.amountPerDose,
       Frequency: newData.dosage.interval.charAt(0),
       TimesPerInterval: newData.dosage.timesPerInterval,
+      TimeBetweenDose: newData.dosage.timeBetweenDose,
       AdditionalInfo: newData.extraInfo,
       Modified: moment(newData.lastModified).format('YYYY-MM-DD HH:mm:ss')
     };
@@ -101,7 +102,7 @@ function AddMedication() {
     let reminderIds : string[] = [];
 
     // check for any empty required fields
-    if (medName == '' || dosageAmount == '' || !medFrequencyContext!.medFrequency[1] || (Number.isNaN(medFrequencyContext!.medFrequency[0]) && medFrequencyContext!.medFrequency[1] != 'asNeeded')) {
+    if (medName == '' || dosageAmount == '' || !medFrequencyContext!.medFrequency[1] || (Number.isNaN(medFrequencyContext!.medFrequency[0]) && medFrequencyContext!.medFrequency[1] != 'asNeeded') || (medFrequencyContext!.medFrequency[1] == 'asNeeded' && Number.isNaN(timeBetweenDose))) {
       Alert.alert('Unfinished Data Entry', 'Please fill in the required fields.', [{text: 'OK'}]);
       return;
     }
@@ -110,6 +111,23 @@ function AddMedication() {
       if (Number.isNaN(refillInfoContext!.refillInfo[0]) || Number.isNaN(refillInfoContext!.refillInfo[1]) || Number.isNaN(refillInfoContext!.refillInfo[2])) {
         Alert.alert('Unfinished Data Entry', 'Please fill in the Refill Reminder fields properly.', [{text: 'OK'}]);
         return;
+      }
+    }
+
+    // check reminder fields
+    if (isMedReminderContext!.isMedReminder) {
+      for (let i = 0; i < medReminderTimesContext!.medReminderTimes.length; i++) {
+        if (!medFrequencyContext!.medFrequency[1] &&
+          !medReminderTimesContext!.medReminderTimes[i] &&
+          !medReminderTimesContext!.medReminderTimes[i].period &&
+          !(medReminderTimesContext!.medReminderTimes[i].hours <= 12) &&
+          !(medReminderTimesContext!.medReminderTimes[i].hours > 0) &&
+          !(medReminderTimesContext!.medReminderTimes[i].mins <= 60) &&
+          !(medReminderTimesContext!.medReminderTimes[i].mins >= 0) &&
+          !((medFrequencyContext!.medFrequency[1] == 'weekly') ? (medReminderTimesContext!.medReminderTimes[i].day >= 0) : true)) {
+            Alert.alert('Unfinished or Invalid Data Entry', 'Please fill in the Reminder fields properly.', [{text: 'OK'}]);
+            return;
+        }
       }
     }
 
@@ -226,6 +244,19 @@ function AddMedication() {
     medFrequencyContext!.setMedFrequency(newTuple);
   }
 
+  React.useEffect(() => {
+    setMedName('');
+    setDosageAmount('');
+    medFrequencyContext!.setMedFrequency([NaN, '']);
+    setValue(null);
+    setExInfo('');
+    setTimeBetweenDose(NaN);
+    isMedReminderContext!.setIsMedReminder(false);
+    medReminderTimesContext!.setMedReminderTimes([]);
+    isRefillReminderContext!.setIsRefillReminder(false);
+    refillInfoContext?.setRefillInfo([NaN, NaN, NaN]);
+  }, [])
+
   return (
     <ScrollView contentContainerStyle={{rowGap: 10}} style={{paddingTop: '5%'}}>
       <View style={{flexDirection: 'row', gap: 10}}>
@@ -269,7 +300,7 @@ function AddMedication() {
         />
       </View>
       <View style={{flexDirection: 'row', gap: 10, flexWrap: 'wrap', display: (medFrequencyContext!.medFrequency[1] == 'asNeeded') ? 'flex' : 'none'}}>
-        <Text>{'Number of Hours Between Doses:'}</Text>
+        <Text>{'Time Between Doses (Hours):'}</Text>
         <TextInput
           onChangeText={(newVal) => setTimeBetweenDose(Number(newVal))}
           value={(Number.isNaN(timeBetweenDose)) ? '' : String(timeBetweenDose)}

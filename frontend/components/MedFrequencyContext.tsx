@@ -1,5 +1,7 @@
 /**
  * Context to share the frequency of the medication (for reminders)
+ * index 0 = the number of times per interval
+ * index 1 = the interval (daily, weekly, etc.)
  */
 
 import React from 'react';

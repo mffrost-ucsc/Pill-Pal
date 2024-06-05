@@ -52,7 +52,7 @@ function MedList() {
       {
         method: 'DELETE',
         headers: header,
-        body: JSON.stringify({MedicationID: med._id}),
+        body: JSON.stringify({ReminderID: med._id}),
       }
     )
     .then((res) => {
@@ -128,7 +128,7 @@ function MedList() {
           isExpanded={expanded.includes(i)}
           onPress={() => {
             if (expanded.includes(i)) {
-              setExpanded(expanded.filter(i => i !== i));
+              setExpanded(expanded.filter((index) => i !== index));
             } else {
               setExpanded([...expanded, i]);
             }

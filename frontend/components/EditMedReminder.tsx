@@ -1,6 +1,6 @@
 /**
- * This component handles the reminders to take medications, including the
- * checkbox and time fields.
+ * This component is essentially the MedReminder component but
+ * with the entry fields already filled out for the medication
  */
 
 import React, {useState} from 'react';
@@ -14,10 +14,11 @@ import {IsMedReminderContext} from './IsMedReminderContext';
 import { AuthorizationStatus } from '@notifee/react-native';
 import { Reminder, Medication } from '../realm/models';
 import {ServerAddr, ServerPort} from '../communication';
+import { EditMedContext } from './EditMedContext';
+import { useObject } from '@realm/react';
 import realm from '../realm/models';
 import storage from '../storage';
 import moment from 'moment'; // for formatting date
-
 
 function addReminderToDB(reminder:Reminder, token:string) {
   let header:any = {'Content-Type': 'application/json'};
@@ -63,114 +64,6 @@ function addReminderToDB(reminder:Reminder, token:string) {
   });
 }
 
-// sets up a reoccurring reminder using notifee
-// does not store the reminder information
-export async function setReminderNoStore(reminder:Reminder, onResponse:(taken: boolean) => void) {
-  const date = new Date();
-  let med:any = realm.objects(Medication).filtered('_id = $0', reminder.medId)[0];
-  let interval;
-
-  if (!med) {
-    med = {name: 'medication', dosage: {amountPerDose: 'dosage'}}
-  }
-
-  // Request permissions (ios)
-  await notifee.requestPermission({
-    announcement: true,
-  });
-
-  // set time and interval
-  if (reminder.day == null) {
-    date.setHours(reminder.hour);
-    date.setMinutes(reminder.minute);
-    interval = RepeatFrequency.DAILY;
-
-    // notifee doesn't accept dates in the past, so increment date by 1 if needed
-    const now = new Date();
-    if (date.getTime() < now.getTime()) {
-      date.setDate(date.getDate() + 1);
-    }
-  } else {
-    const dist = reminder.day - date.getDay();
-    date.setDate(date.getDate() + dist);
-    date.setHours(reminder.hour);
-    date.setMinutes(reminder.minute);
-    interval = RepeatFrequency.WEEKLY;
-
-    // notifee doesn't accept dates in the past, so increment date by 7 if needed
-    const now = new Date();
-    if (date.getTime() < now.getTime()) {
-      date.setDate(date.getDate() + 7);
-    }
-  }
-
-  // create a channel (android)
-  const channelId = await notifee.createChannel({
-    id: 'takeMedReminder',
-    name: 'Take Med Reminder Channel',
-  });
-
-  // Create a time-based trigger
-  const trigger: TimestampTrigger = {
-    type: TriggerType.TIMESTAMP,
-    timestamp: date.getTime(), 
-    repeatFrequency: interval,
-    alarmManager: {
-      allowWhileIdle: true,
-    },
-  };
-
-  // Create a trigger notification
-  await notifee.createTriggerNotification(
-    {
-      id: reminder._id,
-      title: med.name,
-      body: 'Take ' + med.dosage.amountPerDose + ' of ' + med.name,
-      android: {
-        channelId: channelId,
-        importance: AndroidImportance.HIGH,
-        visibility: AndroidVisibility.PRIVATE,
-        autoCancel: false,
-        showTimestamp: true,
-        actions: [
-          {
-            title: 'Taken',
-            pressAction: {id: 'yes'},
-          },
-          {
-            title: 'Not Taken',
-            pressAction: {id: 'no'},
-          },
-        ],
-      },
-      ios: {
-        categoryId: 'reminder',
-      },
-    },
-    trigger,
-  );
-
-  const cb = (type: EventType, detail: EventDetail) => {
-    const { notification, pressAction } = detail;
-
-    if (type === EventType.ACTION_PRESS) {
-      if (pressAction && (pressAction.id === 'yes' || pressAction.id === 'no')) {
-        onResponse(pressAction.id === 'yes');
-      }
-      notifee.cancelDisplayedNotification(reminder._id);
-    }
-  };
-
-  notifee.onForegroundEvent(({type, detail}) => {
-    cb(type, detail);
-  });
-  notifee.onBackgroundEvent(async ({type, detail}) => {
-    cb(type, detail);
-  });
-
-  console.log('reminder set for ' + date.toDateString());
-}
-
 // sets up a reoccurring reminder using notifee and adds the reminder to realm and the database
 export async function setReminder(index:number, notifId:string, med:Medication, dosageAmount:string, value:string, reminderTimes:any[], token:string, onResponse:(taken: boolean) => void) {
   const settings = await notifee.getNotificationSettings();
@@ -192,7 +85,7 @@ export async function setReminder(index:number, notifId:string, med:Medication, 
 
   // date takes military time
   if (reminderTimes[index].period == 'PM' && reminderTimes[index].hours != 12) {
-    reminderTimes[index].hours = reminderTimes[index].hours + 12;
+    reminderTimes[index].hours = +reminderTimes[index].hours + 12;
   } else if (reminderTimes[index].period == 'AM' && reminderTimes[index].hours == 12) {
     reminderTimes[index].hours = 0;
   }
@@ -303,10 +196,12 @@ export async function setReminder(index:number, notifId:string, med:Medication, 
   console.log('reminder set for ' + JSON.stringify(reminderTimes[index]));
 }
 
-export const MedReminder = () => {
+export const EditMedReminder = () => {
   const medReminderTimesContext = React.useContext(MedReminderTimesContext);
   const medFrequencyContext = React.useContext(MedFrequencyContext); // index 1 is interval (daily, weekly, asNeeded), index 0 is number of times per interval
   const isMedReminderContext = React.useContext(IsMedReminderContext);
+  const editMedContext = React.useContext(EditMedContext);
+  const thisMed = useObject(Medication, editMedContext!.medId);
   const [hour, setHour] = useState<Array<number>>([]);
   const [min, setMin] = useState<Array<number>>([]);
   const [dayDropdownOpen, setDayDropdownOpen] = useState<Array<boolean>>([]);
@@ -340,11 +235,9 @@ export const MedReminder = () => {
     let temp;
     if (field == 'hours') {
       temp = [...hour];
-      console.log('temp before: ' + JSON.stringify(temp));
       temp[index] = Number(newVal);
       setHour(temp);
       newList[index].hours = newVal;
-      console.log('temp after: ' + JSON.stringify(temp));
     } else if (field == 'mins') {
       if (Number(newVal) > 0) {
         newVal = newVal.replace(/^0+/, '');
@@ -408,9 +301,45 @@ export const MedReminder = () => {
     }
   }, [isMedReminderContext?.isMedReminder]);
 
+  // fill in reminder fields
   React.useEffect(() => {
-    isMedReminderContext!.setIsMedReminder(false);
-  }, []);
+    if (thisMed) {
+      const reminders = realm.objects(Reminder).filtered('medId = $0', thisMed._id);
+      if (thisMed.takeReminder) {
+        let remList = [];
+        let hoursList = [];
+        let minsList = [];
+        let dayList = [];
+        let periodList = [];
+
+        for (let i = 0; i < reminders.length; i++) {
+          let date = new Date();
+          date.setHours(reminders[i].hour);
+          let period = date.toLocaleTimeString([], {hour: '2-digit'});
+          let hour = date.toLocaleTimeString([], {hour: '2-digit'});
+          hour = period.substring(0, hour.length - 2);
+          period = period.substring(period.length - 2);
+
+          hoursList.push(Number(hour));
+          minsList.push(reminders[i].minute);
+          dayList.push(reminders[i].day);
+          periodList.push(period);
+          remList.push({'hours': Number(hour), 'mins': Number(reminders[i].minute), 'day': Number(reminders[i].day), 'period': period});
+        }
+
+        medReminderTimesContext!.setMedReminderTimes(remList)
+        setHour(hoursList);
+        setMin(minsList);
+        setDayVal(dayList);
+        setPeriodVal(periodList);
+      }
+    }
+  }, [editMedContext?.medId]);
+
+  // reset medReminderTimes if timesPerInterval changes
+  React.useEffect(() => {
+    medReminderTimesContext?.setMedReminderTimes([]);
+  }, [medFrequencyContext?.medFrequency])
 
   const [isSet, setIsSet] = React.useState(false);
   if (!isSet) {

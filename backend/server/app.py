@@ -141,13 +141,19 @@ def add_med():
         if 'AdditionalInfo' in data:
             query += ', AdditionalInfo'
             values.append(data['AdditionalInfo'])
+        if 'TimeBetweenDose' in data:
+            query += ', TimeBetweenDose'
+            values.append(data['TimeBetweenDose'])
         query += ') VALUES (%s, %s, %s, %s, %s, %s, %s'
         if 'AdditionalInfo' in data:
+            query += ', %s'
+        if 'TimeBetweenDose' in data:
             query += ', %s'
         query += ')'
         exec_sql(query, tuple(values), commit=True)
         return jsonify({"status": "success", "message": "Medication added successfully"}), 201
     except mysql.connector.Error as e:
+        print(str(e), file=sys.stderr)
         return jsonify({"status": "fail", "message": str(e)}), 500
 
 @app.route('/medication', methods=['POST'])
@@ -159,7 +165,7 @@ def update_med():
         query = 'UPDATE Medications SET '
         values = []
 
-        for field in ['Name', 'Dosage', 'Frequency', 'TimesPerInterval', 'AdditionalInfo']:
+        for field in ['Name', 'Dosage', 'Frequency', 'TimesPerInterval', 'TimeBetweenDose', 'AdditionalInfo']:
             if field in data:
                 query += field + ' = %s, '
                 values.append(data[field])
@@ -187,7 +193,7 @@ def delete_med():
 def get_med():
     uid = get_jwt_identity()
     try:
-        query = 'SELECT MedicationID, Name, Dosage, Frequency, TimesPerInterval, AdditionalInfo, Modified FROM Medications WHERE UserID = %s'
+        query = 'SELECT MedicationID, Name, Dosage, Frequency, TimesPerInterval, TimeBetweenDose, AdditionalInfo, Modified FROM Medications WHERE UserID = %s'
         return jsonify(exec_sql(query,(uid,)))
     except mysql.connector.Error as e:
         return jsonify({"status": "fail", "message": str(e)}), 500
@@ -235,6 +241,7 @@ def update_reminder():
         exec_sql(query, tuple(values), commit=True)
         return jsonify({"status": "success", "message": "Reminder data updated successfully"}), 200
     except mysql.connector.Error as e:
+        print(str(e), file=sys.stderr)
         return jsonify({"status": "fail", "message": str(e)}), 500
 
 @app.route('/reminder', methods=['DELETE'])
@@ -246,6 +253,7 @@ def delete_reminder():
         exec_sql('DELETE FROM Reminders WHERE ReminderID = %s AND UserID = %s', (data['ReminderID'], uid), commit=True)
         return jsonify({"status": "success", "message": "Reminder deleted successfully"}), 200
     except mysql.connector.Error as e:
+        print(str(e), file=sys.stderr)
         return jsonify({"status": "fail", "message": str(e)}), 500
 
 

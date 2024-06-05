@@ -128,6 +128,7 @@ function HomeScreen(){
       Dosage: newData.dosage.amountPerDose,
       Frequency: newData.dosage.interval.charAt(0),
       TimesPerInterval: newData.dosage.timesPerInterval,
+      TimeBetweenDose: newData.dosage.timeBetweenDose,
       AdditionalInfo: newData.extraInfo,
       Modified: moment(newData.lastModified).format('YYYY-MM-DD HH:mm:ss')
     };
@@ -172,6 +173,7 @@ function HomeScreen(){
       Dosage: newData.dosage.amountPerDose,
       Frequency: newData.dosage.interval.charAt(0),
       TimesPerInterval: newData.dosage.timesPerInterval,
+      TimeBetweenDose: newData.dosage.timeBetweenDose,
       AdditionalInfo: newData.extraInfo,
       Modified: moment(newData.lastModified).format('YYYY-MM-DD HH:mm:ss')
     };
@@ -215,7 +217,7 @@ function HomeScreen(){
   const updateDbReminder = (newData:Record<string, any>) => {
     let header:any = {'Content-Type': 'application/json'};
     const data = {
-      ReminderId: newData._id,
+      ReminderID: newData._id,
       MedicationID: newData.medId,
       Hour: newData.hour,
       Minute: newData.minute,
@@ -306,6 +308,7 @@ function HomeScreen(){
       dbEntry.Dosage != localEntry.dosage.amountPerDose ||
       dbEntry.Frequency != localEntry.dosage.interval.charAt(0) ||
       dbEntry.TimesPerInterval != localEntry.dosage.timesPerInterval ||
+      dbEntry.TimeBetweenDose != localEntry.dosage.timeBetweenDose ||
       dbEntry.AdditionalInfo != localEntry.extraInfo) {
       return false;
     }
@@ -375,6 +378,7 @@ function HomeScreen(){
                   localMed.dosage.amountPerDose = dbMed.Dosage;
                   localMed.dosage.interval = interval;
                   localMed.dosage.timesPerInterval = dbMed.TimesPerInterval;
+                  localMed.dosage.timeBetweenDose = dbMed.TimeBetweenDose;
                   localMed.extraInfo = dbMed.AdditionalInfo;
                   localMed.lastModified = dbMed.Modified;
                 })
@@ -400,6 +404,7 @@ function HomeScreen(){
             amountPerDose: dbMed.Dosage,
             interval: interval,
             timesPerInterval: dbMed.TimesPerInterval,
+            timeBetweenDose: dbMed.TimeBetweenDose,
           }
 
           // write to realm
@@ -439,6 +444,7 @@ function HomeScreen(){
                   localMed.dosage.amountPerDose = dbMed.Dosage;
                   localMed.dosage.interval = interval;
                   localMed.dosage.timesPerInterval = dbMed.TimesPerInterval;
+                  localMed.dosage.timeBetweenDose = dbMed.TimeBetweenDose;
                   localMed.extraInfo = dbMed.AdditionalInfo;
                   localMed.lastModified = dbMed.Modified;
                 })
@@ -465,6 +471,14 @@ function HomeScreen(){
             isFound = true;
             if (!compareReminderEntries(dbRem, localRem)) { // if the data isn't equal
               if (dbRem.Modified > localRem.lastModified) { // database is more recent
+                // make sure takeReminder field is set properly
+                let med = realm.objects(Medication).filtered('_id = $0', localRem.medId);
+                if (med[0]) {
+                  realm.write(() => {
+                    med[0].takeReminder = true;
+                  })
+                }
+
                 // write to realm
                 realm.write(() => {
                   localRem.hour = dbRem.Hour;
@@ -480,7 +494,15 @@ function HomeScreen(){
         }
         // confirm we found a matching entry; if not need to add it to Realm
         if (!isFound) {
-          let medId = new BSON.UUID(dbRem.ReminderID);
+          let medId = new BSON.UUID(dbRem.MedicationID);
+
+          // make sure takeReminder field is set properly
+          let med = realm.objects(Medication).filtered('_id = $0', medId);
+          if (med[0]) {
+            realm.write(() => {
+              med[0].takeReminder = true;
+            })
+          }
 
           // write to realm
           realm.write(() => {
@@ -504,6 +526,14 @@ function HomeScreen(){
             isFound = true;
             if (!compareReminderEntries(dbRem, localRem)) { // if the data isn't equal
               if (dbRem.Modified > localRem.lastModified) { // database is more recent
+                // make sure takeReminder field is set properly
+                let med = realm.objects(Medication).filtered('_id = $0', localRem.medId);
+                if (med[0]) {
+                  realm.write(() => {
+                    med[0].takeReminder = true;
+                  })
+                }
+ 
                 // write to realm
                 realm.write(() => {
                   localRem.hour = dbRem.Hour;
