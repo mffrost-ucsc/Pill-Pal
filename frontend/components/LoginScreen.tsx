@@ -46,6 +46,7 @@ function LoginScreen(){
           <Text h4>Email Address</Text>
           <TextInput
             placeholder="Enter Email"
+            autoCapitalize='none'
             value={email}
             onChangeText={setEmail}
           />
@@ -53,6 +54,7 @@ function LoginScreen(){
           <View style={{flexDirection: 'row'}}>
             <TextInput
               placeholder="Enter Password"
+              autoCapitalize='none'
               style={{width: '75%'}}
               secureTextEntry={!showPassword}
               value={password}

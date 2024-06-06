@@ -9,7 +9,6 @@ import {
   ScrollView,
   Alert,
 } from 'react-native';
-import {Button} from '@rneui/themed';
 import {ServerAddr, ServerPort} from '../communication';
 import {useQuery} from '@realm/react';
 import realm from '../realm/models';
@@ -574,7 +573,6 @@ function HomeScreen(){
         <MedList/>
         <Refill/>
         <LogPopup/>
-        <Button onPress={() => signOut()}>Logout</Button>
       </ScrollView>
     </SafeAreaView>
   );

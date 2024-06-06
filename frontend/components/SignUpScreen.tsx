@@ -42,14 +42,18 @@ function SignUpScreen() {
     await signUp(data);
 
     // add user to Realm
-    realm.write(() => {
-      realm.create(User, {
-        userId: storage.getInt('currentUser'),
-        firstName: firstName,
-        lastName: lastName,
-        email: email,
+    try {
+      realm.write(() => {
+        realm.create(User, {
+          userId: storage.getInt('currentUser'),
+          firstName: firstName,
+          lastName: lastName,
+          email: email,
+        });
       });
-    });
+    } catch {
+      console.log('Cannot create user (Realm)');
+    }
 
     navigation.navigate('Login');
   }
@@ -74,6 +78,7 @@ function SignUpScreen() {
           <Text h4>Email Address</Text>
           <TextInput
             placeholder="Enter Email"
+            autoCapitalize='none'
             value={email}
             onChangeText={setEmail}
           />
@@ -81,6 +86,7 @@ function SignUpScreen() {
           <View style={{flexDirection: 'row'}}>
             <TextInput
               placeholder="Enter Password"
+              autoCapitalize='none'
               style={{width: '75%'}}
               secureTextEntry={!showPassword}
               value={password}
