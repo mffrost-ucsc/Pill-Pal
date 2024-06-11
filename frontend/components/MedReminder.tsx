@@ -6,7 +6,7 @@
 import React, {useState} from 'react';
 import {Text, TextInput, View, Alert, Platform} from 'react-native';
 import {CheckBox} from '@rneui/themed';
-import notifee, {AndroidNotificationSetting, TimestampTrigger, TriggerType, RepeatFrequency, AndroidImportance, AndroidVisibility, EventType, EventDetail, IntervalTrigger, TimeUnit} from '@notifee/react-native';
+import notifee, {AndroidNotificationSetting, TimestampTrigger, TriggerType, RepeatFrequency, AndroidImportance, AndroidVisibility, EventType, EventDetail} from '@notifee/react-native';
 import DropDownPicker from 'react-native-dropdown-picker';
 import {MedReminderTimesContext} from './MedReminderTimesContext';
 import {MedFrequencyContext} from './MedFrequencyContext';
@@ -21,6 +21,9 @@ import storage from '../storage';
 import moment from 'moment'; // for formatting date
 
 export async function remindIn15(med:Medication, onResponse:(taken: boolean) => void) {
+  const fifteenMins = new Date();
+  fifteenMins.setMinutes(fifteenMins.getMinutes() + 15);
+
   // create a channel (android)
   const channelId = await notifee.createChannel({
     id: 'takeMedReminder',
@@ -30,11 +33,13 @@ export async function remindIn15(med:Medication, onResponse:(taken: boolean) => 
   // create categories (ios)
   await setCategories();
 
-  // create interval trigger
-  const trigger: IntervalTrigger = {
-    type: TriggerType.INTERVAL,
-    interval: 15,
-    timeUnit: TimeUnit.MINUTES
+  // Create a time-based trigger
+  const trigger: TimestampTrigger = {
+    type: TriggerType.TIMESTAMP,
+    timestamp: fifteenMins.getTime(), 
+    alarmManager: {
+      allowWhileIdle: true,
+    },
   };
 
   // Create a trigger notification
@@ -73,16 +78,19 @@ export async function remindIn15(med:Medication, onResponse:(taken: boolean) => 
   const cb = (type: EventType, detail: EventDetail) => {
     const { notification, pressAction } = detail;
 
-    if (type === EventType.ACTION_PRESS && pressAction) {
-      if (pressAction.id === 'confirm' || pressAction.id === 'deny') {
-        onResponse(pressAction.id === 'confirm');
-      } else if (pressAction.id === 'wait') {
-        remindIn15(med, taken => {
-          logAsked(realm, med);
-          if (taken) {
-            logTaken(realm, med);
-          }
-        },);
+    if (notification?.id == notifId) {
+      if (type === EventType.ACTION_PRESS && pressAction) {
+        if (pressAction.id === 'confirm' || pressAction.id === 'deny') {
+          onResponse(pressAction.id === 'confirm');
+        } else if (pressAction.id === 'wait') {
+          remindIn15(med, taken => {
+            logAsked(realm, med);
+            if (taken) {
+              logTaken(realm, med);
+            }
+          });
+          onResponse(false);
+        }
       }
     }
   };
@@ -161,7 +169,7 @@ export async function setReminderNoStore(reminder:Reminder, onResponse:(taken: b
   await setCategories();
 
   // set time and interval
-  if (reminder.day == null) {
+  if (reminder.day == null) { // daily reminders
     date.setHours(reminder.hour);
     date.setMinutes(reminder.minute);
     interval = RepeatFrequency.DAILY;
@@ -171,7 +179,7 @@ export async function setReminderNoStore(reminder:Reminder, onResponse:(taken: b
     if (date.getTime() < now.getTime()) {
       date.setDate(date.getDate() + 1);
     }
-  } else {
+  } else { // weekly reminders
     const dist = reminder.day - date.getDay();
     date.setDate(date.getDate() + dist);
     date.setHours(reminder.hour);
@@ -238,16 +246,19 @@ export async function setReminderNoStore(reminder:Reminder, onResponse:(taken: b
   const cb = (type: EventType, detail: EventDetail) => {
     const { notification, pressAction } = detail;
 
-    if (type === EventType.ACTION_PRESS && pressAction) {
-      if (pressAction.id === 'confirm' || pressAction.id === 'deny') {
-        onResponse(pressAction.id === 'confirm');
-      } else if (pressAction.id === 'wait') {
-        remindIn15(med, taken => {
-          logAsked(realm, med);
-          if (taken) {
-            logTaken(realm, med);
-          }
-        },);
+    if (notification?.id == reminder._id) {
+      if (type === EventType.ACTION_PRESS && pressAction) {
+        if (pressAction.id === 'confirm' || pressAction.id === 'deny') {
+          onResponse(pressAction.id === 'confirm');
+        } else if (pressAction.id === 'wait') {
+          remindIn15(med, taken => {
+            logAsked(realm, med);
+            if (taken) {
+              logTaken(realm, med);
+            }
+          });
+          onResponse(false);
+        }
       }
     }
   };
@@ -369,16 +380,19 @@ export async function setReminder(index:number, notifId:string, med:Medication, 
   const cb = (type: EventType, detail: EventDetail) => {
     const { notification, pressAction } = detail;
 
-    if (type === EventType.ACTION_PRESS && pressAction) {
-      if (pressAction.id === 'confirm' || pressAction.id === 'deny') {
-        onResponse(pressAction.id === 'confirm');
-      } else if (pressAction.id === 'wait') {
-        remindIn15(med, taken => {
-          logAsked(realm, med);
-          if (taken) {
-            logTaken(realm, med);
-          }
-        },);
+    if (notification?.id == notifId) {
+      if (type === EventType.ACTION_PRESS && pressAction) {
+        if (pressAction.id === 'confirm' || pressAction.id === 'deny') {
+          onResponse(pressAction.id === 'confirm');
+        } else if (pressAction.id === 'wait') {
+          remindIn15(med, taken => {
+            logAsked(realm, med);
+            if (taken) {
+              logTaken(realm, med);
+            }
+          });
+          onResponse(false);
+        }
       }
     }
   };

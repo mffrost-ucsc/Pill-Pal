@@ -50,6 +50,7 @@ function MedList() {
       signOut();
     }
 
+    console.log(JSON.stringify({ReminderID: reminder._id}));
     fetch(url, 
       {
         method: 'DELETE',
@@ -90,6 +91,7 @@ function MedList() {
     for (const remId of reminderIds) {
       const reminder = realm.objects(Reminder).filtered('_id = $0', remId);
       deleteReminder(reminder);
+      notifee.cancelNotification(remId);
     }
 
     // delete med from database

@@ -43,9 +43,7 @@ If you need to reset the backend to it's inital state (i.e. the database will be
     $ docker-compose down -v
     $ docker-compose build --no-cache
     $ docker-compose up -d
-    
 
-The database can be connected to and edited via MySQL Workbench. Instructions are here: https://medium.com/@chrischuck35/how-to-create-a-mysql-instance-with-docker-compose-1598f3cc1be
 
 #### Closing
 When you are done working, run:

@@ -327,7 +327,7 @@ function HomeScreen(){
   }
 
   const setupReminders = () => {
-    const reminders = realm.objects(Reminder);
+    const reminders = realm.objects(Reminder).filtered('userId = $0', storage.getInt('currentUser'));
 
     for (const rem of reminders) {
       const med = realm.objects(Medication).filtered('_id = $0', rem.medId)[0];
@@ -572,7 +572,6 @@ function HomeScreen(){
       >
         <MedList/>
         <Refill/>
-        <LogPopup/>
       </ScrollView>
     </SafeAreaView>
   );

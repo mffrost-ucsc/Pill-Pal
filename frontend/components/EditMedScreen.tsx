@@ -27,6 +27,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useObject } from '@realm/react';
 import {logAsked, logTaken} from '../log';
 import { v4 as uuidv4 } from 'uuid';
+import { sendRefillReminder } from './RefillReminder';
+import notifee from '@notifee/react-native';
 
 function EditMedScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<ParamListBase>>();
@@ -242,11 +244,20 @@ function EditMedScreen() {
 
       // edit reminders
       let reminders = realm.objects(Reminder).filtered('userId = $0 && medId = $1', storage.getInt('currentUser'), thisMed._id);
+      let remIds = [];
+
+      // cancel all current reminders
+      // save ids into a list
+      for (const rem of reminders) {
+        remIds.push(rem._id);
+        notifee.cancelNotification(rem._id);
+      }
 
       // delete reminders until list lengths are the same
       while (reminders.length > reminderTimes.length) {
         deleteReminder(reminders[0]);
         reminders = realm.objects(Reminder).filtered('userId = $0 && medId = $1', storage.getInt('currentUser'), thisMed._id);
+        remIds.pop();
       }
 
       // update current reminders
@@ -287,10 +298,9 @@ function EditMedScreen() {
       }
       
       // if more reminders than before, add them
-      let reminderIds = (thisMed.reminderId) ? [... thisMed.reminderId] : [];
       for (let i = reminders.length; i < medReminderTimesContext!.medReminderTimes.length; i++) {
         const newId = uuidv4();
-        reminderIds.push(newId);
+        remIds.push(newId);
         setReminder(
           i,
           newId,
@@ -306,12 +316,20 @@ function EditMedScreen() {
             }
           },
         );
+        remIds.push(newId);
       }
 
       // update reminderId entry
       realm.write(() => {
-        thisMed.reminderId = reminderIds;
+        thisMed.reminderId = remIds;
       });
+
+      // if pill count is less than refill amount send notification
+      if (thisMed.refillReminder) {
+        if (thisMed.pillCount! <= thisMed.refillReminderCount!) {
+          sendRefillReminder(thisMed);
+        }
+      }
     }
 
     // reset fields

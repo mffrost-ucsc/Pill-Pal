@@ -174,16 +174,19 @@ export async function setReminder(index:number, notifId:string, med:Medication, 
   const cb = (type: EventType, detail: EventDetail) => {
     const { notification, pressAction } = detail;
 
-    if (type === EventType.ACTION_PRESS && pressAction) {
-      if (pressAction.id === 'confirm' || pressAction.id === 'deny') {
-        onResponse(pressAction.id === 'confirm');
-      } else if (pressAction.id === 'wait') {
-        remindIn15(med, taken => {
-          logAsked(realm, med);
-          if (taken) {
-            logTaken(realm, med);
-          }
-        },);
+    if (notification?.id == notifId) {
+      if (type === EventType.ACTION_PRESS && pressAction) {
+        if (pressAction.id === 'confirm' || pressAction.id === 'deny') {
+          onResponse(pressAction.id === 'confirm');
+        } else if (pressAction.id === 'wait') {
+          remindIn15(med, taken => {
+            logAsked(realm, med);
+            if (taken) {
+              logTaken(realm, med);
+            }
+          });
+          onResponse(false);
+        }
       }
     }
   };

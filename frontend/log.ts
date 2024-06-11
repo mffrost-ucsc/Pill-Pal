@@ -1,14 +1,16 @@
 import Realm, {BSON} from 'realm';
+import { sendRefillReminder } from './components/RefillReminder';
 import realm, {Medication, MedLog, Reminder} from './realm/models';
 import storage from './storage';
 
 export function toAsk(meds: Realm.Results<Medication>): Medication | null {
   for (const med of meds) {
     const reminders = realm.objects(Reminder).filtered('medId = $0', med._id);
+    const now = new Date();
 
     // dont ask if no reminders set
     if (reminders.length == 0) {
-      return null;
+      continue;
     }
 
     const should = [] // list of when meds should be taken
@@ -35,7 +37,7 @@ export function toAsk(meds: Realm.Results<Medication>): Medication | null {
     const last = med.lastAsked ?? should[0];
     for (const remTime of should) {
       var hourDiff = Math.abs(last.getTime() - remTime.getTime()) / 3600000;
-      if (last.getTime() < remTime.getTime()) { 
+      if (last.getTime() < remTime.getTime() && remTime.getTime() < now.getTime()) { 
         if (hourDiff < 1) {
           return med;
         }
@@ -54,6 +56,17 @@ export function logTaken(realm: Realm, med: Medication) {
       userId: storage.getInt('currentUser'),
     });
   });
+
+  if (med.refillReminder) {
+    realm.write(() => {
+      med.pillCount = med.pillCount! - med.dosage.amountPerDose!;
+    })
+
+    if (med.pillCount! <= med.refillReminderCount!) {
+      sendRefillReminder(med);
+    }
+  }
+
   console.log('Took ' + med.name + ' at ' + new Date().toString() + '.');
 }
 

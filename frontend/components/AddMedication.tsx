@@ -25,6 +25,7 @@ import { RefillInfoContext } from './RefillInfoContext';
 import { RefillReminder } from './RefillReminder';
 import {logAsked, logTaken} from '../log';
 import {ServerAddr, ServerPort} from '../communication';
+import { sendRefillReminder } from './RefillReminder';
 import AuthenticationContext from './AuthenticationContext';
 import storage from '../storage';
 import moment from 'moment'; // for formatting date
@@ -157,37 +158,23 @@ function AddMedication() {
     // set up reminders
     if (isMedReminderContext!.isMedReminder) {
       for (let i = 0; i < medReminderTimesContext!.medReminderTimes.length; i++) {
-        if (medFrequencyContext!.medFrequency[1] &&
-          medReminderTimesContext!.medReminderTimes[i] &&
-          medReminderTimesContext!.medReminderTimes[i].period &&
-          medReminderTimesContext!.medReminderTimes[i].hours <= 12 &&
-          medReminderTimesContext!.medReminderTimes[i].hours > 0 &&
-          medReminderTimesContext!.medReminderTimes[i].mins <= 60 &&
-          medReminderTimesContext!.medReminderTimes[i].mins >= 0 &&
-          ((medFrequencyContext!.medFrequency[1] == 'weekly') ? (medReminderTimesContext!.medReminderTimes[i].day >= 0) : true)) {
-            const newId = uuidv4();
-            reminderIds.push(newId);
-            setReminder(
-              i,
-              newId,
-              med,
-              dosageAmount,
-              medFrequencyContext!.medFrequency[1],
-              medReminderTimesContext!.medReminderTimes,
-              authToken,
-              taken => {
-                logAsked(realm, med);
-                if (taken) {
-                  logTaken(realm, med);
-                }
-              },
-            );
-        } else {
-          Alert.alert('Unfinished or Invalid Data Entry', 'Please fill in the Reminder fields properly.', [{text: 'OK'}]);
-          const times = JSON.stringify(medReminderTimesContext!.medReminderTimes);
-          console.log('Med reminder times: ' + times);
-          return;
-        }
+        const newId = uuidv4();
+        reminderIds.push(newId);
+        setReminder(
+          i,
+          newId,
+          med,
+          dosageAmount,
+          medFrequencyContext!.medFrequency[1],
+          medReminderTimesContext!.medReminderTimes,
+          authToken,
+          taken => {
+            logAsked(realm, med);
+            if (taken) {
+              logTaken(realm, med);
+            }
+          },
+        );
       }
     }
 
@@ -199,6 +186,13 @@ function AddMedication() {
     // add med to database
     const realmEntry = realm.objects(Medication).filtered('_id = $0', id);
     addMedToDb(JSON.parse(JSON.stringify(realmEntry[0])));
+
+    // if pill count is less than refill amount send notification
+    if (med.refillReminder) {
+      if (med.pillCount <= med.refillReminderCount!) {
+        sendRefillReminder(med);
+      }
+    }
 
     // reset fields
     setMedName('');
@@ -308,7 +302,7 @@ function AddMedication() {
         />
       </View>
       <View style={{flexDirection: 'row', gap: 10}}>
-        <Text>{'Additional Info'}</Text>
+        <Text>{'Additional Info:'}</Text>
         <TextInput
           onChangeText={setExInfo}
           value={exInfo}

@@ -160,9 +160,9 @@ function App(): React.JSX.Element {
           return;
         });
       },
-      signOut: () => {
+      signOut: async () => {
         storage.setInt('currentUser', NaN);
-        notifee.cancelAllNotifications();
+        await notifee.cancelAllNotifications();
         dispatch({ type: 'SIGN_OUT' });
       },
       signUp: async (data:any) => {
